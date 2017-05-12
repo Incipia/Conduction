@@ -11,33 +11,56 @@ import Bindable
 
 public protocol StringConductionModelType: StringBindable {
    // MARK: – Keys
-   var modelKeyStrings: [String] { get }
-   var viewKeyStrings: [String] { get }
+   var modelReadKeyStrings: [String] { get }
+   var modelWriteKeyStrings: [String] { get }
+   var viewReadKeyStrings: [String] { get }
+   var viewWriteKeyStrings: [String] { get }
    
    func bindings(for keyString: String) -> [Binding]
 }
 
+public extension StringConductionModelType {
+   // MARK: - Keys
+   var modelKeyStrings: [String] { return modelReadKeyStrings + modelWriteKeyStrings }
+   var viewKeyStrings: [String] { return modelReadKeyStrings + modelWriteKeyStrings }
+}
+
 public protocol ConductionModelType: Bindable, StringConductionModelType {
    // MARK: – Keys
-   var modelKeys: [Key] { get }
-   var viewKeys: [Key] { get }
+   var modelReadKeys: [Key] { get }
+   var modelWriteKeys: [Key] { get }
+   var viewReadKeys: [Key] { get }
+   var viewWriteKeys: [Key] { get }
    
    // MARK: - Bindings
    func bindings(for key: Key) -> [Binding]
 }
 
 public extension ConductionModelType {
-   var modelKeyStrings: [String] {
-      return modelKeys.map { return $0.rawValue }
-   }
-   var viewKeyStrings: [String] {
-      return viewKeys.map { return $0.rawValue }
-   }
-   
+   // MARK: - Keys
+   var modelKeys: [Key] { return modelReadKeys + modelWriteKeys }
+   var viewKeys: [Key] { return modelReadKeys + modelWriteKeys }
+
+   // MARK: - Bindings
    func bindings(for keyString: String) -> [Binding] {
       guard let key = Key(rawValue: keyString) else { return [] }
       return bindings(for: key)
    }
+
+   // MARK: - StringConductionModelType Protocol
+   var modelReadKeyStrings: [String] {
+      return modelReadKeys.map { return $0.rawValue }
+   }
+   var modelWriteKeyStrings: [String] {
+      return modelWriteKeys.map { return $0.rawValue }
+   }
+   var viewReadKeyStrings: [String] {
+      return viewReadKeys.map { return $0.rawValue }
+   }
+   var viewWriteKeyStrings: [String] {
+      return viewWriteKeys.map { return $0.rawValue }
+   }
+   
 }
 
 public protocol ConductionModelState {
@@ -57,6 +80,12 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
       }
    }
    public var onStateChange: ((State) -> Void)?
+   open var modelReadOnlyKeys: [Key] { return [] }
+   open var modelReadWriteKeys: [Key] { return [] }
+   open var modelWriteOnlyKeys: [Key] { return [] }
+   open var viewReadOnlyKeys: [Key] { return [] }
+   open var viewReadWriteKeys: [Key] { return [] }
+   open var viewWriteOnlyKeys: [Key] { return [] }
    
    // MARK: Public
    public func value<T>(for key: Key, default defaultValue: T?) -> T? {
@@ -82,8 +111,10 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
    open func set(conductedValue: Any?, for key: Key) throws {}
    
    // MARK: - ConductionModelType Protocol
-   open var modelKeys: [Key] { return [] }
-   open var viewKeys: [Key] { return [] }
+   open var modelReadKeys: [Key] { return modelReadOnlyKeys + modelReadWriteKeys }
+   open var modelWriteKeys: [Key] { return modelReadWriteKeys + modelWriteOnlyKeys }
+   open var viewReadKeys: [Key] { return viewReadOnlyKeys + viewReadWriteKeys }
+   open var viewWriteKeys: [Key] { return viewReadWriteKeys + viewWriteOnlyKeys }
    
    public func bindings(for key: Key) -> [Binding] {
       let bindings = modelBindings.filter(key: key)
@@ -102,17 +133,14 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
    public var keysBeingSet: [Key] = []
    
    public func value(for key: Key) -> Any? {
+      guard modelReadKeys.contains(key) else { return conductedValue(for: key) }
       let bindings = modelBindings.filter(key: key)
-      guard bindings.isEmpty else { return bindings.last!.targetValue }
-      return conductedValue(for: key)
+      return bindings.last?.targetValue
    }
    
    public func setOwn(value: Any?, for key: Key) throws {
+      guard modelWriteKeys.contains(key) else { try set(conductedValue: value, for: key); return }
       let bindings = modelBindings.filter(key: key)
-      guard bindings.isEmpty else {
-         try bindings.forEach { try $0.set(targetValue: value) }
-         return
-      }
-      try set(conductedValue: value, for: key)
+      try bindings.forEach { try $0.set(targetValue: value) }
    }
 }
