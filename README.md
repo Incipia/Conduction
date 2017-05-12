@@ -22,7 +22,9 @@ pod "Conduction"
 
 ## Author
 
-gklei, gregory@incipia.co
+Greg Klein, gregory@incipia.co
+
+Leif Meyer, leif@incipia.co
 
 ## License
 
