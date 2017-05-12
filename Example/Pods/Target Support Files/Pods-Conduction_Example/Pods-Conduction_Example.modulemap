@@ -1,0 +1,6 @@
+framework module Pods_Conduction_Example {
+  umbrella header "Pods-Conduction_Example-umbrella.h"
+
+  export *
+  module * { export * }
+}

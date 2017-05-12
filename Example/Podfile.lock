@@ -1,0 +1,16 @@
+PODS:
+  - Conduction (0.1.0)
+
+DEPENDENCIES:
+  - Conduction (from `../`)
+
+EXTERNAL SOURCES:
+  Conduction:
+    :path: ../
+
+SPEC CHECKSUMS:
+  Conduction: ead490dc25ca960772d2eb3e24e36e6ab0fae3a1
+
+PODFILE CHECKSUM: d7864d2f8051b452389ed700665a2efba628b566
+
+COCOAPODS: 1.2.1

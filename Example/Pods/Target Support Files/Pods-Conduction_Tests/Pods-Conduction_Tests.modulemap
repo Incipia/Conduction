@@ -1,0 +1,6 @@
+framework module Pods_Conduction_Tests {
+  umbrella header "Pods-Conduction_Tests-umbrella.h"
+
+  export *
+  module * { export * }
+}
