@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'Conduction'
-  s.version          = '0.1.0'
+  s.version          = '0.0.1'
   s.summary          = 'A framework for separating logic for the user flow throughout an app.'
 
 # This description is used to generate tags and improve search results.
