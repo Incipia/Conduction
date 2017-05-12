@@ -91,6 +91,12 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
       return [Binding(key: key, target: self, targetKey: key)]
    }
    
+   public func bindings<MapKey: IncKVKeyType>(for key: Key, mappedTo mapKey: MapKey) -> [Binding] {
+      let bindings = modelBindings.filter(key: key)
+      guard bindings.isEmpty else { return bindings.map(firstKey: key, toSecondKey: mapKey) }
+      return [Binding(key: mapKey, target: self, targetKey: key)]
+   }
+   
    // MARK: - Bindable Protocol
    public var bindingBlocks: [Key : [((targetObject: AnyObject, rawTargetKey: String)?, Any?) throws -> Bool?]] = [:]
    public var keysBeingSet: [Key] = []
