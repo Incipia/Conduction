@@ -1,9 +1,9 @@
 {
   "name": "Conduction",
-  "version": "0.1.0",
-  "summary": "A short description of Conduction.",
-  "description": "TODO: Add long description of the pod here.",
-  "homepage": "https://github.com/gklei/Conduction",
+  "version": "0.0.1",
+  "summary": "A framework for separating logic for the user flow throughout an app.",
+  "description": "A framework that helps assist in separating logic that's used for the user flow throughout an app.",
+  "homepage": "https://github.com/Incipia/Conduction",
   "license": {
     "type": "MIT",
     "file": "LICENSE"
@@ -12,11 +12,16 @@
     "gklei": "gregory@incipia.co"
   },
   "source": {
-    "git": "https://github.com/gklei/Conduction.git",
-    "tag": "0.1.0"
+    "git": "https://github.com/Incipia/Conduction.git",
+    "tag": "0.0.1"
   },
   "platforms": {
-    "ios": "8.0"
+    "ios": "10.0"
   },
-  "source_files": "Conduction/Classes/**/*"
+  "source_files": "Conduction/Classes/**/*",
+  "dependencies": {
+    "Bindable": [
+
+    ]
+  }
 }
