@@ -1,0 +1,11 @@
+use_frameworks!
+
+target 'Conduction_Example' do
+  pod 'Conduction', :path => '../'
+
+  target 'Conduction_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end
