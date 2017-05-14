@@ -70,7 +70,11 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
          onStateChange?(state)
       }
    }
-   public var onStateChange: ((State) -> Void)?
+   public var onStateChange: ((State) -> Void)? {
+      didSet {
+         onStateChange?(state)
+      }
+   }
    open var modelReadOnlyKeys: [Key] { return [] }
    open var modelReadWriteKeys: [Key] { return [] }
    open var modelWriteOnlyKeys: [Key] { return [] }
