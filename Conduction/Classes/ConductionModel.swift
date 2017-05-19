@@ -136,17 +136,18 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
    open var viewWriteKeys: [Key] { return viewReadWriteKeys + viewWriteOnlyKeys }
    
    // MARK: - Bindable Protocol
+   public static var bindableKeys: [Key] { return Key.all }
    public var bindingBlocks: [Key : [((targetObject: AnyObject, rawTargetKey: String)?, Any?) throws -> Bool?]] = [:]
    public var keysBeingSet: [Key] = []
    
    public func value(for key: Key) -> Any? {
-      guard viewReadKeys.contains(key) || modelWriteKeys.contains(key) else { fatalError() }
+      guard viewReadKeys.contains(key) || modelKeys.contains(key) else { fatalError() }
       let value = values[key]
       return conductedValue(value, for: key)
    }
    
    public func setOwn(value: Any?, for key: Key) throws {
-      guard viewWriteKeys.contains(key) || modelReadKeys.contains(key) else { fatalError() }
+      guard viewKeys.contains(key) || modelReadKeys.contains(key) else { fatalError() }
       let conductedValue = try set(conductedValue: value, for: key)
       values[key] = conductedValue
    }
