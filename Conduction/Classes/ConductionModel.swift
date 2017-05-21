@@ -124,10 +124,32 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
          modelBindings.filter(key: $0).forEach { self.unbindOneWay(key: $0.key, to: $0.target, key: $0.targetKey) }
       }
    }
+   
+   // MARK: - Model Syncing
+   public func sync(model: KVStringCompliance) throws {
+      var model = model
+      try modelReadKeys.forEach {
+         try self.set(value: model.value(for: $0.rawValue), for: $0)
+      }
+      try modelWriteOnlyKeys.forEach {
+         try model.set(value: self.value(for: $0), for: $0.rawValue)
+      }
+   }
+   
+   public func sync(modelBindings: [Binding]) throws {
+      try modelReadKeys.forEach {
+         try modelBindings.filter(key: $0).forEach { try self.set(value: $0.targetValue, for: $0.key) }
+      }
+      try modelWriteOnlyKeys.forEach {
+         try modelBindings.filter(key: $0).forEach { try $0.set(targetValue: self.value(for: $0.key)) }
+      }
+   }
 
    // MARK: - Subclass Hooks
    open func conductedValue(_ value: Any?, for key: Key) -> Any? { return value }
    open func set(conductedValue value: Any?, for key: Key) throws -> Any? { return value }
+   open func willSet(conductedValue value: Any?, for key: Key) {}
+   open func didSet(conductedValue value: Any?, for key: Key) {}
    
    // MARK: - ConductionModelType Protocol
    open var modelReadKeys: [Key] { return modelReadOnlyKeys + modelReadWriteKeys }
@@ -148,7 +170,9 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
    
    public func setOwn(value: Any?, for key: Key) throws {
       guard viewKeys.contains(key) || modelReadKeys.contains(key) else { fatalError() }
+      willSet(conductedValue: value, for: key)
       let conductedValue = try set(conductedValue: value, for: key)
       values[key] = conductedValue
+      didSet(conductedValue: value, for: key)
    }
 }
