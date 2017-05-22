@@ -126,15 +126,13 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
    }
    
    // MARK: - Model Syncing
-   @discardableResult public func sync(model: IncKVStringCompliance) throws -> IncKVStringCompliance {
-      var model = model
+   public func sync<T: IncKVStringCompliance>(model: inout T) throws {
       try modelReadKeys.forEach {
          try self.set(value: model.value(for: $0.rawValue), for: $0)
       }
       try modelWriteOnlyKeys.forEach {
          try model.set(value: self.value(for: $0), for: $0.rawValue)
       }
-      return model
    }
    
    public func sync(modelBindings: [Binding]) throws {
