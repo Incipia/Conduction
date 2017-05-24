@@ -37,7 +37,6 @@ open class Conductor: NSObject {
    }
    
    open func conductorDidDismiss(from context: UINavigationController) {
-      print("\(type(of: self)) did dismiss")
    }
    
    public func show(with context: UINavigationController, animated: Bool = false) {
