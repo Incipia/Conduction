@@ -76,10 +76,10 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
       }
    }
    open var modelReadOnlyKeys: [Key] { return [] }
-   open var modelReadWriteKeys: [Key] { return [] }
+   open var modelReadWriteKeys: [Key] { return Key.all }
    open var modelWriteOnlyKeys: [Key] { return [] }
    open var viewReadOnlyKeys: [Key] { return [] }
-   open var viewReadWriteKeys: [Key] { return [] }
+   open var viewReadWriteKeys: [Key] { return Key.all }
    open var viewWriteOnlyKeys: [Key] { return [] }
    
    // MARK: - Public
