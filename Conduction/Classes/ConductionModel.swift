@@ -60,10 +60,7 @@ public struct ConductionModelEmptyState: ConductionModelState {
    public init() {}
 }
 
-open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: ConductionModelType {
-   // MARK: Private Properties
-   private var values: [Key : Any] = [:]
-   
+open class ConductionStateModel<State: ConductionModelState> {
    // MARK: Public Properties
    public var state: State = State() {
       didSet {
@@ -75,6 +72,16 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
          onStateChange?(state)
       }
    }
+   
+   // MARK: - Init
+   public init() {}
+}
+
+open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: ConductionStateModel<State>, ConductionModelType {
+   // MARK: Private Properties
+   private var values: [Key : Any] = [:]
+   
+   // MARK: Public Properties
    open var modelReadOnlyKeys: [Key] { return [] }
    open var modelReadWriteKeys: [Key] { return Key.all }
    open var modelWriteOnlyKeys: [Key] { return [] }
@@ -86,9 +93,6 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
    public func value<T>(for key: Key, default defaultValue: T?) -> T? {
       return value(for: key) as? T ?? defaultValue
    }
-   
-   // MARK: - Init
-   public init() {}
    
    // MARK: - Model Binding
    public func bind(model: StringBindable) throws {
