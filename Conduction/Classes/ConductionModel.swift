@@ -54,6 +54,13 @@ public extension ConductionModelType {
 
 public protocol ConductionModelState {
    init()
+   mutating func update(_ block: (inout Self) -> Void)
+}
+
+extension ConductionModelState {
+   mutating public func update(_ block: (inout Self) -> Void) {
+      block(&self)
+   }
 }
 
 public struct ConductionModelEmptyState: ConductionModelState {
