@@ -21,6 +21,7 @@ open class Conductor: NSObject {
    public var dismissBlock: (() -> Void) = {}
    
    fileprivate var _isShowing: Bool = false
+   fileprivate var _resetBlock: (() -> Void)?
 
    // Meant to be overridden
    open var rootViewController: UIViewController? {
@@ -55,8 +56,9 @@ open class Conductor: NSObject {
       _ = context?.popToViewController(topBeforeShowing, animated: true)
    }
    
-   @discardableResult @objc public func reset() -> Bool {
+   @discardableResult @objc public func reset(completion: (() -> Void)? = nil) -> Bool {
       guard let rootViewController = rootViewController else { return false }
+      _resetBlock = completion
       _ = context?.popToViewController(rootViewController, animated: true)
       return true
    }
@@ -119,6 +121,11 @@ extension Conductor: UINavigationControllerDelegate {
       if !_isShowing, rootViewController == viewController {
          conductorDidShow(in: navigationController)
          _isShowing = true
+      }
+      
+      if _isShowing, rootViewController == viewController, let resetBlock = _resetBlock {
+         resetBlock()
+         _resetBlock = nil
       }
       
       if _conductorIsBeingPoppedOffContext(byShowing: viewController) {
