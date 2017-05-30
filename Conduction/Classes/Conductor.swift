@@ -111,7 +111,10 @@ extension Conductor: UINavigationControllerDelegate {
    }
    
    public func navigationController(_ navigationController: UINavigationController, didShow viewController: UIViewController, animated: Bool) {
-      previousContextDelegate?.navigationController?(navigationController, didShow: viewController, animated: animated)
+      weak var previousDelegate = previousContextDelegate
+      defer {
+         previousDelegate?.navigationController?(navigationController, didShow: viewController, animated: animated)
+      }
       guard let rootViewController = rootViewController else { return }
       if !_isShowing, rootViewController == viewController {
          conductorDidShow(in: navigationController)
