@@ -21,7 +21,8 @@ open class Conductor: NSObject {
    public var dismissBlock: (() -> Void) = {}
    
    fileprivate var _isShowing: Bool = false
-   fileprivate var _resetBlock: (() -> Void)?
+   fileprivate var _resetCompletion: (() -> Void)?
+   fileprivate var _dismissCompletion: (() -> Void)?
 
    // Meant to be overridden
    open var rootViewController: UIViewController? {
@@ -51,14 +52,15 @@ open class Conductor: NSObject {
       context.pushViewController(rootViewController, animated: animated)
    }
    
-   @objc public func dismiss() {
+   @objc public func dismiss(completion: (() -> Void)? = nil) {
       guard let topBeforeShowing = topBeforeShowing else { return }
+      _dismissCompletion = completion
       _ = context?.popToViewController(topBeforeShowing, animated: true)
    }
    
    @discardableResult @objc public func reset(completion: (() -> Void)? = nil) -> Bool {
       guard let rootViewController = rootViewController else { return false }
-      _resetBlock = completion
+      _resetCompletion = completion
       _ = context?.popToViewController(rootViewController, animated: true)
       return true
    }
@@ -70,6 +72,10 @@ open class Conductor: NSObject {
       context?.delegate = previousContextDelegate
       previousContextDelegate = nil
       context = nil
+      if let dismissCompletion = _dismissCompletion {
+         dismissCompletion()
+         _dismissCompletion = nil
+      }
       dismissBlock()
    }
 }
@@ -90,7 +96,7 @@ open class TabConductor: Conductor {
       tabBarController?.selectedIndex = index
    }
    
-   override public func dismiss() {
+   override public func dismiss(completion: (() -> Void)?) {
       fatalError("dismiss not yet implemented for TabConductor")
    }
 }
@@ -123,9 +129,9 @@ extension Conductor: UINavigationControllerDelegate {
          _isShowing = true
       }
       
-      if _isShowing, rootViewController == viewController, let resetBlock = _resetBlock {
-         resetBlock()
-         _resetBlock = nil
+      if _isShowing, rootViewController == viewController, let resetCompletion = _resetCompletion {
+         resetCompletion()
+         _resetCompletion = nil
       }
       
       if _conductorIsBeingPoppedOffContext(byShowing: viewController) {
