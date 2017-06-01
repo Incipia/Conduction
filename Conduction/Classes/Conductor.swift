@@ -52,19 +52,35 @@ open class Conductor: NSObject {
       context.pushViewController(rootViewController, animated: animated)
    }
    
-   @objc public func dismiss(completion: (() -> Void)? = nil) {
-      guard let topBeforeShowing = topBeforeShowing else { return }
-      _dismissCompletion = completion
+   @objc public func dismiss() {
+      guard let topBeforeShowing = topBeforeShowing else {
+         _dismissCompletion?()
+         _dismissCompletion = nil
+         return
+      }
       _ = context?.popToViewController(topBeforeShowing, animated: true)
    }
    
-   @discardableResult @objc public func reset(completion: (() -> Void)? = nil) -> Bool {
-      guard let rootViewController = rootViewController else { return false }
-      _resetCompletion = completion
+   public func dismissWithCompletion(_ completion: @escaping (() -> Void)) {
+      _dismissCompletion = completion
+      dismiss()
+   }
+   
+   @discardableResult @objc public func reset() -> Bool {
+      guard let rootViewController = rootViewController else {
+         _resetCompletion?()
+         _resetCompletion = nil
+         return false
+      }
       _ = context?.popToViewController(rootViewController, animated: true)
       return true
    }
-   
+
+   @discardableResult @objc public func resetWithCompletion(_ completion: @escaping (() -> Void)) -> Bool {
+      _resetCompletion = completion
+      return reset()
+   }
+
    fileprivate func _dismiss() {
       guard _isShowing else { fatalError("\(#function) called when \(self) is not showing") }
       
@@ -96,7 +112,7 @@ open class TabConductor: Conductor {
       tabBarController?.selectedIndex = index
    }
    
-   override public func dismiss(completion: (() -> Void)?) {
+   override public func dismiss() {
       fatalError("dismiss not yet implemented for TabConductor")
    }
 }
