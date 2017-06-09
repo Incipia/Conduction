@@ -97,7 +97,11 @@ open class Conductor: NSObject {
 }
 
 open class TabConductor: Conductor {
-   weak var tabBarController: UITabBarController?
+   public weak var tabBarController: UITabBarController?
+   
+   public var tabBarContext: UINavigationController? {
+      return tabBarController?.navigationController
+   }
    
    public func show(in tabBarController: UITabBarController, with context: UINavigationController, animated: Bool = false) {
       show(with: context)
