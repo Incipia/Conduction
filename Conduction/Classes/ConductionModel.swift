@@ -221,11 +221,11 @@ open class WriteOnlyConductionModel<Key: IncKVKeyType, State: ConductionModelSta
 
 open class ConductionStateWrapper<DataModel, State: ConductionModelState>: ConductionStateModel<State> {
    // MARK: - Public Properties
-   var dataModel: DataModel! {
+   public var dataModel: DataModel! {
       didSet { valueChanged() }
    }
    
-   var isEmpty: Bool { return dataModel == nil }
+   public var isEmpty: Bool { return dataModel == nil }
    
    // MARK: - Init
    public init(dataModel: DataModel) {
