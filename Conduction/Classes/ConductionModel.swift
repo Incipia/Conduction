@@ -112,6 +112,47 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
    open var viewReadWriteKeys: [Key] { return [] }
    open var viewWriteOnlyKeys: [Key] { return [] }
    
+   // MARK: - Init
+   public override init() {
+      super.init()
+   }
+   
+   public init?(model: StringBindable) {
+      super.init()
+      do {
+         try bind(model: model)
+      } catch {
+         return nil
+      }
+   }
+
+   public init?(modelBindings: [Binding]) {
+      super.init()
+      do {
+         try bind(modelBindings: modelBindings)
+      } catch {
+         return nil
+      }
+   }
+
+   public init?<T: IncKVStringCompliance>(sync model: inout T) {
+      super.init()
+      do {
+         try sync(model: &model)
+      } catch {
+         return nil
+      }
+   }
+   
+   public init?(syncBindings: [Binding]) {
+      super.init()
+      do {
+         try sync(modelBindings: syncBindings)
+      } catch {
+         return nil
+      }
+   }
+
    // MARK: - Public
    public func value<T>(for key: Key, default defaultValue: T?) -> T? {
       return value(for: key) as? T ?? defaultValue
