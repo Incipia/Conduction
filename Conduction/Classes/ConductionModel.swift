@@ -253,3 +253,13 @@ open class ConductionWrapper<DataModel> {
       self.dataModel = dataModel
    }
 }
+
+open class ConductionDataWrapper<DataModel> {
+   // MARK: - Public Properties
+   public let dataModel: DataModel
+   
+   // MARK: - Init
+   public init(dataModel: DataModel) {
+      self.dataModel = dataModel
+   }
+}
