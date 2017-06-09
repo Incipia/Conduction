@@ -70,18 +70,34 @@ public struct ConductionModelEmptyState: ConductionModelState {
 open class ConductionStateModel<State: ConductionModelState> {
    // MARK: Public Properties
    public var state: State = State() {
-      didSet {
-         onStateChange?(state)
-      }
-   }
-   public var onStateChange: ((State) -> Void)? {
-      didSet {
-         onStateChange?(state)
-      }
+      didSet { stateChanged() }
    }
    
+   public var onStateChange: ((State) -> Void)? {
+      didSet { stateChanged() }
+   }
+   
+   public var onValueChange: (() -> Void)? {
+      didSet { valueChanged() }
+   }
+
+   public var onChange: (() -> Void)? {
+      didSet { onChange?() }
+   }
+
    // MARK: - Init
    public init() {}
+   
+   // MARK: - Public
+   public func stateChanged() {
+      onStateChange?(state)
+      onChange?()
+   }
+   
+   public func valueChanged() {
+      onValueChange?()
+      onChange?()
+   }
 }
 
 open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: ConductionStateModel<State>, ConductionModelType {
@@ -90,10 +106,10 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
    
    // MARK: Public Properties
    open var modelReadOnlyKeys: [Key] { return [] }
-   open var modelReadWriteKeys: [Key] { return Key.all }
+   open var modelReadWriteKeys: [Key] { return [] }
    open var modelWriteOnlyKeys: [Key] { return [] }
    open var viewReadOnlyKeys: [Key] { return [] }
-   open var viewReadWriteKeys: [Key] { return Key.all }
+   open var viewReadWriteKeys: [Key] { return [] }
    open var viewWriteOnlyKeys: [Key] { return [] }
    
    // MARK: - Public
@@ -184,5 +200,36 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
       let conductedValue = try set(conductedValue: value, for: key)
       values[key] = conductedValue
       didSet(conductedValue: value, for: key)
+      valueChanged()
+   }
+}
+
+open class ReadWriteConductionModel<Key: IncKVKeyType, State: ConductionModelState>: ConductionModel<Key, State> {
+   open override var modelReadWriteKeys: [Key] { return Key.all }
+   open override var viewReadWriteKeys: [Key] { return Key.all }
+}
+
+open class ReadOnlyConductionModel<Key: IncKVKeyType, State: ConductionModelState>: ConductionModel<Key, State> {
+   open override var modelReadOnlyKeys: [Key] { return Key.all }
+   open override var viewReadOnlyKeys: [Key] { return Key.all }
+}
+
+open class WriteOnlyConductionModel<Key: IncKVKeyType, State: ConductionModelState>: ConductionModel<Key, State> {
+   open override var modelWriteOnlyKeys: [Key] { return Key.all }
+   open override var viewWriteOnlyKeys: [Key] { return Key.all }
+}
+
+open class WrapperConductionStateModel<DataModel, State: ConductionModelState>: ConductionStateModel<State> {
+   // MARK: - Public Properties
+   var dataModel: DataModel! {
+      didSet { valueChanged() }
+   }
+   
+   var isEmpty: Bool { return dataModel == nil }
+   
+   // MARK: - Init
+   public init(dataModel: DataModel) {
+      self.dataModel = dataModel
+      super.init()
    }
 }
