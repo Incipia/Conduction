@@ -236,7 +236,7 @@ open class ConductionStateWrapper<DataModel, State: ConductionModelState>: Condu
 
 open class ConductionWrapper<DataModel> {
    // MARK: - Public Properties
-   var dataModel: DataModel! {
+   public var dataModel: DataModel! {
       didSet { onChange?() }
    }
    
@@ -244,9 +244,11 @@ open class ConductionWrapper<DataModel> {
       didSet { onChange?() }
    }
    
-   var isEmpty: Bool { return dataModel == nil }
+   public var isEmpty: Bool { return dataModel == nil }
    
    // MARK: - Init
+   public init() {}
+   
    public init(dataModel: DataModel) {
       self.dataModel = dataModel
    }
