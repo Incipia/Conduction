@@ -219,7 +219,7 @@ open class WriteOnlyConductionModel<Key: IncKVKeyType, State: ConductionModelSta
    open override var viewWriteOnlyKeys: [Key] { return Key.all }
 }
 
-open class WrapperConductionStateModel<DataModel, State: ConductionModelState>: ConductionStateModel<State> {
+open class ConductionStateWrapper<DataModel, State: ConductionModelState>: ConductionStateModel<State> {
    // MARK: - Public Properties
    var dataModel: DataModel! {
       didSet { valueChanged() }
@@ -231,5 +231,23 @@ open class WrapperConductionStateModel<DataModel, State: ConductionModelState>: 
    public init(dataModel: DataModel) {
       self.dataModel = dataModel
       super.init()
+   }
+}
+
+open class ConductionWrapper<DataModel> {
+   // MARK: - Public Properties
+   var dataModel: DataModel! {
+      didSet { onChange?() }
+   }
+   
+   public var onChange: (() -> Void)? {
+      didSet { onChange?() }
+   }
+   
+   var isEmpty: Bool { return dataModel == nil }
+   
+   // MARK: - Init
+   public init(dataModel: DataModel) {
+      self.dataModel = dataModel
    }
 }
