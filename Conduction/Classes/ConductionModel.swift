@@ -221,22 +221,22 @@ open class WriteOnlyConductionModel<Key: IncKVKeyType, State: ConductionModelSta
 
 open class ConductionStateWrapper<DataModel, State: ConductionModelState>: ConductionStateModel<State> {
    // MARK: - Public Properties
-   public var dataModel: DataModel! {
+   public var model: DataModel! {
       didSet { valueChanged() }
    }
    
-   public var isEmpty: Bool { return dataModel == nil }
+   public var isEmpty: Bool { return model == nil }
    
    // MARK: - Init
-   public init(dataModel: DataModel) {
-      self.dataModel = dataModel
+   public init(model: DataModel) {
+      self.model = model
       super.init()
    }
 }
 
 open class ConductionWrapper<DataModel> {
    // MARK: - Public Properties
-   public var dataModel: DataModel! {
+   public var model: DataModel! {
       didSet { onChange?() }
    }
    
@@ -244,22 +244,22 @@ open class ConductionWrapper<DataModel> {
       didSet { onChange?() }
    }
    
-   public var isEmpty: Bool { return dataModel == nil }
+   public var isEmpty: Bool { return model == nil }
    
    // MARK: - Init
    public init() {}
    
-   public init(dataModel: DataModel) {
-      self.dataModel = dataModel
+   public init(model: DataModel) {
+      self.model = model
    }
 }
 
 open class ConductionDataWrapper<DataModel> {
    // MARK: - Public Properties
-   public let dataModel: DataModel
+   public let model: DataModel
    
    // MARK: - Init
-   public init(dataModel: DataModel) {
-      self.dataModel = dataModel
+   public init(model: DataModel) {
+      self.model = model
    }
 }
