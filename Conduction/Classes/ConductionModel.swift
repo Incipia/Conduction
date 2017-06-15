@@ -68,12 +68,12 @@ public struct ConductionModelEmptyState: ConductionModelState {
 }
 
 open class ConductionStateModel<State: ConductionModelState> {
-   // MARK: Public Properties
-   public var state: State = State() {
-      didSet { stateChanged() }
+   // MARK: - Public Properties
+   public var state = State() {
+      didSet { stateChanged(oldState: oldValue) }
    }
    
-   public var onStateChange: ((State) -> Void)? {
+   public var onStateChange: ((State, State) -> Void)? {
       didSet { stateChanged() }
    }
    
@@ -89,8 +89,8 @@ open class ConductionStateModel<State: ConductionModelState> {
    public init() {}
    
    // MARK: - Public
-   public func stateChanged() {
-      onStateChange?(state)
+   public func stateChanged(oldState: State? = nil) {
+      onStateChange?(oldState ?? state, state)
       onChange?()
    }
    
