@@ -235,12 +235,12 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
       return conductedValue(value, for: key)
    }
    
-   public func setOwn(value: Any?, for key: Key) throws {
+   public func setOwn(value: inout Any?, for key: Key) throws {
       guard viewKeys.contains(key) || modelReadKeys.contains(key) else { fatalError() }
       willSet(conductedValue: value, for: key)
-      let conductedValue = try set(conductedValue: value, for: key)
-      values[key] = conductedValue
-      didSet(conductedValue: conductedValue, for: key)
+      value = try set(conductedValue: value, for: key)
+      values[key] = value
+      didSet(conductedValue: value, for: key)
       valueChanged()
    }
 }
