@@ -100,6 +100,10 @@ open class ConductionStateModel<State: ConductionModelState> {
    }
 }
 
+public enum ConductionModelStateKey: String, IncKVKeyType {
+   case state
+}
+
 open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: ConductionStateModel<State>, ConductionModelType {
    // MARK: Private Properties
    private var values: [Key : Any] = [:]
@@ -302,5 +306,118 @@ open class ConductionDataWrapper<DataModel> {
    // MARK: - Init
    public init(model: DataModel) {
       self.model = model
+   }
+}
+
+protocol ConductionDataDelegate: class {
+   func conductionData<DataKey: IncKVKeyType>(_ conductionData: ConductionData<DataKey>, willSetValue value: inout Any?, for key: DataKey)
+}
+
+public class ConductionData<Key: IncKVKeyType>: Bindable {
+   // MARK: - Private Properties
+   private var _values: [Key : Any] = [:]
+   
+   // MARK: - Public Properties
+   weak var delegate: ConductionDataDelegate?
+   
+   // MARK: - Bindable
+   public var bindingBlocks: [Key : [((targetObject: AnyObject, rawTargetKey: String)?, Any?) throws -> Bool?]] = [:]
+   public var keysBeingSet: [Key] = []
+   
+   public func value(for key: Key) -> Any? {
+      return _values[key]
+   }
+   
+   public func setOwn(value: inout Any?, for key: Key) throws {
+      delegate?.conductionData(self, willSetValue: &value, for: key)
+      _values[key] = value
+   }
+}
+
+open class ConductionViewModel<ModelKey: IncKVKeyType, Key: IncKVKeyType, State: ConductionModelState>: ConductionStateModel<State>, Bindable {
+   // MARK: - Private Properties
+   private var _values: [Key : Any] = [:]
+   
+   // MARK: - Public Propertis
+   public var modelData = ConductionData<ModelKey>()
+   public var viewData = ConductionData<ModelKey>()
+
+   // MARK: - Init
+   public override init() {
+      super.init()
+      
+      modelData.delegate = self
+      viewData.delegate = self
+   }
+   
+   public convenience init(model: StringBindable) {
+      self.init()
+      
+      try! bind(model: model)
+   }
+   
+   public convenience init(modelBindings: [Binding]) {
+      self.init()
+
+      try! bind(modelBindings: modelBindings)
+   }
+   
+   // MARK: - Model Binding
+   public func bind(model: StringBindable) throws {
+      let modelBindings = ModelKey.all.map { return Binding(key: $0, target: model, targetKey: $0) }
+      try bind(modelBindings: modelBindings)
+   }
+   
+   public func bind(modelBindings: [Binding]) throws {
+      try modelBindings.forEach { try modelData.bind($0) }
+   }
+   
+   public func unbind(model: StringBindable) {
+      let modelBindings = ModelKey.all.map { return Binding(key: $0, target: model, targetKey: $0) }
+      unbind(modelBindings: modelBindings)
+   }
+   
+   public func unbind(modelBindings: [Binding]) {
+      try modelBindings.forEach { modelData.unbind($0) }
+   }
+   
+   // MARK: - Subclass Hooks
+   open func conductedValue(_ value: Any?, for key: Key) -> Any? { return value }
+   open func set(conductedValue value: Any?, for key: Key) throws -> Any? { return value }
+   open func willSet(conductedValue value: Any?, for key: Key) {}
+   open func didSet(conductedValue conductedValue: Any?, with value: inout Any?, for key: Key) {}
+   
+   open func conductModelValue(_ value: inout Any?, for key: ModelKey) -> Any? { return value }
+   open func conductViewValue(_ value: inout Any?, for key: ModelKey) -> Any? { return value }
+   
+   // MARK: - Bindable Protocol
+   public static var bindableKeys: [Key] { return Key.all }
+   public var bindingBlocks: [Key : [((targetObject: AnyObject, rawTargetKey: String)?, Any?) throws -> Bool?]] = [:]
+   public var keysBeingSet: [Key] = []
+   
+   public func value(for key: Key) -> Any? {
+      let value = _values[key]
+      return conductedValue(value, for: key)
+   }
+   
+   public func setOwn(value: inout Any?, for key: Key) throws {
+      willSet(conductedValue: value, for: key)
+      let conductedValue = try set(conductedValue: value, for: key)
+      _values[key] = conductedValue
+      didSet(conductedValue: conductedValue, with: &value, for: key)
+      valueChanged()
+   }
+}
+
+extension ConductionViewModel: ConductionDataDelegate {
+   func conductionData<DataKey : IncKVKeyType>(_ conductionData: ConductionData<DataKey>, willSetValue value: inout Any?, for key: DataKey) {
+      guard let key = key as? ModelKey else { fatalError() }
+      if conductionData === modelData {
+         viewData[key] = conductModelValue(&value, for: key)
+      } else if conductionData === viewData {
+         modelData[key] = conductViewValue(&value, for: key)
+      } else {
+         fatalError()
+      }
    }
 }
