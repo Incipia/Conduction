@@ -214,9 +214,9 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
 
    // MARK: - Subclass Hooks
    open func conductedValue(_ value: Any?, for key: Key) -> Any? { return value }
-   open func set(conductedValue value: Any?, for key: Key) throws -> Any? { return value }
+   open func set(conductedValue value: inout Any?, for key: Key) throws -> Any? { return value }
    open func willSet(conductedValue value: Any?, for key: Key) {}
-   open func didSet(conductedValue value: Any?, for key: Key) {}
+   open func didSet(conductedValue conductedValue: Any?, with value: Any?, for key: Key) {}
    
    // MARK: - ConductionModelType Protocol
    open var modelReadKeys: [Key] { return modelReadOnlyKeys + modelReadWriteKeys }
@@ -238,9 +238,9 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
    public func setOwn(value: inout Any?, for key: Key) throws {
       guard viewKeys.contains(key) || modelReadKeys.contains(key) else { fatalError() }
       willSet(conductedValue: value, for: key)
-      value = try set(conductedValue: value, for: key)
-      values[key] = value
-      didSet(conductedValue: value, for: key)
+      let conductedValue = try set(conductedValue: &value, for: key)
+      values[key] = conductedValue
+      didSet(conductedValue: conductedValue, with: value, for: key)
       valueChanged()
    }
 }
