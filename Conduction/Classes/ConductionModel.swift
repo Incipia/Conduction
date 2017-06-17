@@ -34,7 +34,7 @@ public protocol ConductionModelType: Bindable, StringConductionModelType {
 public extension ConductionModelType {
    // MARK: - Keys
    var modelKeys: [Key] { return modelReadKeys + modelWriteKeys }
-   var viewKeys: [Key] { return modelReadKeys + modelWriteKeys }
+   var viewKeys: [Key] { return viewReadKeys + viewWriteKeys }
 
    // MARK: - StringConductionModelType Protocol
    var modelReadKeyStrings: [String] {
@@ -240,7 +240,7 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
       willSet(conductedValue: value, for: key)
       let conductedValue = try set(conductedValue: value, for: key)
       values[key] = conductedValue
-      didSet(conductedValue: value, for: key)
+      didSet(conductedValue: conductedValue, for: key)
       valueChanged()
    }
 }
