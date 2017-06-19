@@ -387,8 +387,8 @@ open class ConductionViewModel<ModelKey: IncKVKeyType, Key: IncKVKeyType, State:
    open func willSet(conductedValue value: Any?, for key: Key) {}
    open func didSet(conductedValue conductedValue: Any?, with value: inout Any?, for key: Key) {}
    
-   open func conductModelValue(_ value: inout Any?, for key: ModelKey) -> Any? { return value }
-   open func conductViewValue(_ value: inout Any?, for key: ModelKey) -> Any? { return value }
+   open func conductViewValue(from modelValue: inout Any?, for key: ModelKey) -> Any? { return value }
+   open func conductModelValue(from viewValue: inout Any?, for key: ModelKey) -> Any? { return value }
    
    // MARK: - Bindable Protocol
    public static var bindableKeys: [Key] { return Key.all }
@@ -413,9 +413,9 @@ extension ConductionViewModel: ConductionDataDelegate {
    func conductionData<DataKey : IncKVKeyType>(_ conductionData: ConductionData<DataKey>, willSetValue value: inout Any?, for key: DataKey) {
       guard let key = key as? ModelKey else { fatalError() }
       if conductionData === modelData {
-         viewData[key] = conductModelValue(&value, for: key)
+         viewData[key] = conductViewValue(from: &value, for: key)
       } else if conductionData === viewData {
-         modelData[key] = conductViewValue(&value, for: key)
+         modelData[key] = conductModelValue(from: &value, for: key)
       } else {
          fatalError()
       }
