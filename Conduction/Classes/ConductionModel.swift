@@ -220,7 +220,7 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
    open func conductedValue(_ value: Any?, for key: Key) -> Any? { return value }
    open func set(conductedValue value: Any?, for key: Key) throws -> Any? { return value }
    open func willSet(conductedValue value: Any?, for key: Key) {}
-   open func didSet(conductedValue conductedValue: Any?, with value: inout Any?, for key: Key) {}
+   open func didSet(conductedValue: Any?, with value: inout Any?, for key: Key) {}
    
    // MARK: - ConductionModelType Protocol
    open var modelReadKeys: [Key] { return modelReadOnlyKeys + modelReadWriteKeys }
@@ -378,14 +378,14 @@ open class ConductionViewModel<ModelKey: IncKVKeyType, Key: IncKVKeyType, State:
    }
    
    public func unbind(modelBindings: [Binding]) {
-      try modelBindings.forEach { modelData.unbind($0) }
+      modelBindings.forEach { modelData.unbind($0) }
    }
    
    // MARK: - Subclass Hooks
    open func conductedValue(_ value: Any?, for key: Key) -> Any? { return value }
    open func set(conductedValue value: Any?, for key: Key) throws -> Any? { return value }
    open func willSet(conductedValue value: Any?, for key: Key) {}
-   open func didSet(conductedValue conductedValue: Any?, with value: inout Any?, for key: Key) {}
+   open func didSet(conductedValue: Any?, with value: inout Any?, for key: Key) {}
    
    open func conductViewValue(from modelValue: inout Any?, for key: ModelKey) -> Any? { return value }
    open func conductModelValue(from viewValue: inout Any?, for key: ModelKey) -> Any? { return value }
@@ -410,7 +410,7 @@ open class ConductionViewModel<ModelKey: IncKVKeyType, Key: IncKVKeyType, State:
 }
 
 extension ConductionViewModel: ConductionDataDelegate {
-   func conductionData<DataKey : IncKVKeyType>(_ conductionData: ConductionData<DataKey>, willSetValue value: inout Any?, for key: DataKey) {
+   func conductionData<DataKey>(_ conductionData: ConductionData<DataKey>, willSetValue value: inout Any?, for key: DataKey) {
       guard let key = key as? ModelKey else { fatalError() }
       if conductionData === modelData {
          viewData[key] = conductViewValue(from: &value, for: key)
