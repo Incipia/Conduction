@@ -44,6 +44,7 @@ public protocol ConductionStateObserverType: class {
 
 public extension ConductionStateObserverType {
    @discardableResult public func addStateObserver(_ changeBlock: @escaping StateChangeBlock) -> ConductionObserverHandle {
+      changeBlock(state, state)
       return _stateChangeBlocks.add(newValue: changeBlock)
    }
    

@@ -37,6 +37,7 @@ public protocol ConductionWrapperObserverType: class {
 
 public extension ConductionWrapperObserverType {
    @discardableResult public func addModelObserver(_ changeBlock: @escaping ModelChangeBlock) -> ConductionObserverHandle {
+      changeBlock(model, model)
       return _modelChangeBlocks.add(newValue: changeBlock)
    }
    
