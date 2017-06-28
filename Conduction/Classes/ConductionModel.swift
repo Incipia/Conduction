@@ -9,9 +9,44 @@
 import Foundation
 import Bindable
 
-open class ConductionModel<ModelKey: IncKVKeyType, Key: IncKVKeyType, State: ConductionState>: ConductionStateObserver<State>, Bindable {
+public protocol ConductionKeyObserver: class {
+   // MARK: - Associated Types
+   associatedtype Key
+   
+   typealias KeyChangeBlock = (_ key: Key, _ oldValue: Any?, _ newValue: Any?) -> Void
+   
+   // MARK: - Public Properties
+   var _keyChangeBlocks: [ConductionObserverHandle : KeyChangeBlock] { get set }
+   
+   // MARK: - Public
+   @discardableResult func addKeyObserver(_ changeBlock: @escaping KeyChangeBlock) -> ConductionObserverHandle
+   
+   func removeKeyObserver(handle: ConductionObserverHandle)
+   
+   func keyChanged(_ key: Key, oldValue: Any?, newValue: Any?)
+}
+
+public extension ConductionKeyObserver {
+   @discardableResult public func addKeyObserver(_ changeBlock: @escaping KeyChangeBlock) -> ConductionObserverHandle {
+      return _keyChangeBlocks.add(newValue: changeBlock)
+   }
+   
+   public func removeKeyObserver(handle: ConductionObserverHandle) {
+      _keyChangeBlocks[handle] = nil
+   }
+   
+   func keyChanged(_ key: Key, oldValue: Any?, newValue: Any?) {
+      _keyChangeBlocks.forEach { $0.value(key, oldValue, newValue) }
+   }
+}
+
+open class ConductionModel<ModelKey: IncKVKeyType, Key: IncKVKeyType, State: ConductionState>: ConductionStateObserver<State>, Bindable, ConductionKeyObserver {
+   // MARK: - Nested Types
+   public typealias KeyChangeBlock = (_ key: Key, _ oldValue: Any?, _ newValue: Any?) -> Void
+
    // MARK: - Private Properties
    private var _values: [Key : Any] = [:]
+   public var _keyChangeBlocks: [ConductionObserverHandle : KeyChangeBlock] = [:]
    
    // MARK: - Public Propertis
    public var modelData = ConductionData<ModelKey>()
@@ -76,10 +111,12 @@ open class ConductionModel<ModelKey: IncKVKeyType, Key: IncKVKeyType, State: Con
    }
    
    public func setOwn(value: inout Any?, for key: Key) throws {
+      let oldValue = _values[key]
       willSet(conductedValue: value, for: key)
       let conductedValue = try set(conductedValue: value, for: key)
       _values[key] = conductedValue
       didSet(conductedValue: conductedValue, with: &value, for: key)
+      keyChanged(key, oldValue: oldValue, newValue: conductedValue)
    }
 }
 
@@ -303,9 +340,13 @@ protocol ConductionDataDelegate: class {
    func conductionData<DataKey>(_ conductionData: ConductionData<DataKey>, willSetValue value: inout Any?, for key: DataKey)
 }
 
-public class ConductionData<Key: IncKVKeyType>: Bindable {
+public class ConductionData<Key: IncKVKeyType>: Bindable, ConductionKeyObserver {
+   // MARK: - Nested Types
+   public typealias KeyChangeBlock = (_ key: Key, _ oldValue: Any?, _ newValue: Any?) -> Void
+   
    // MARK: - Private Properties
    private var _values: [Key : Any] = [:]
+   public var _keyChangeBlocks: [ConductionObserverHandle : KeyChangeBlock] = [:]
    
    // MARK: - Public Properties
    weak var delegate: ConductionDataDelegate?
@@ -319,7 +360,9 @@ public class ConductionData<Key: IncKVKeyType>: Bindable {
    }
    
    public func setOwn(value: inout Any?, for key: Key) throws {
+      let oldValue = _values[key]
       delegate?.conductionData(self, willSetValue: &value, for: key)
       _values[key] = value
+      keyChanged(key, oldValue: oldValue, newValue: value)
    }
 }

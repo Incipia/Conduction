@@ -28,7 +28,7 @@ public protocol ConductionWrapperObserver: class {
    var _modelChangeBlocks: [ConductionObserverHandle : ModelChangeBlock] { get set }
    
    // MARK: - Public
-   @discardableResult func addStateObserver(_ changeBlock: @escaping ModelChangeBlock) -> ConductionObserverHandle
+   @discardableResult func addModelObserver(_ changeBlock: @escaping ModelChangeBlock) -> ConductionObserverHandle
    
    func removeModelObserver(handle: ConductionObserverHandle)
    
@@ -36,7 +36,7 @@ public protocol ConductionWrapperObserver: class {
 }
 
 public extension ConductionWrapperObserver {
-   @discardableResult public func addStateObserver(_ changeBlock: @escaping ModelChangeBlock) -> ConductionObserverHandle {
+   @discardableResult public func addModelObserver(_ changeBlock: @escaping ModelChangeBlock) -> ConductionObserverHandle {
       return _modelChangeBlocks.add(newValue: changeBlock)
    }
    
