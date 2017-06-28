@@ -57,7 +57,6 @@ public extension ConductionStateObserverType {
    }
 }
 
-
 open class ConductionStateObserver<State: ConductionState>: ConductionStateObserverType {
    // MARK: - Nested Types
    public typealias StateChangeBlock = (_ old: State, _ new: State) -> Void

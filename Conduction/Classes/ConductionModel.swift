@@ -327,17 +327,17 @@ open class KeyedConductionModel<Key: IncKVKeyType, State: ConductionState>: Cond
    }
 }
 
-open class ReadWriteConductionModel<Key: IncKVKeyType, State: ConductionState>: KeyedConductionModel<Key, State> {
+open class ReadWriteKeyedConductionModel<Key: IncKVKeyType, State: ConductionState>: KeyedConductionModel<Key, State> {
    open override var modelReadWriteKeys: [Key] { return Key.all }
    open override var viewReadWriteKeys: [Key] { return Key.all }
 }
 
-open class ReadOnlyConductionModel<Key: IncKVKeyType, State: ConductionState>: KeyedConductionModel<Key, State> {
+open class ReadOnlyKeyedConductionModel<Key: IncKVKeyType, State: ConductionState>: KeyedConductionModel<Key, State> {
    open override var modelReadOnlyKeys: [Key] { return Key.all }
    open override var viewReadOnlyKeys: [Key] { return Key.all }
 }
 
-open class WriteOnlyConductionModel<Key: IncKVKeyType, State: ConductionState>: KeyedConductionModel<Key, State> {
+open class WriteOnlyKeyedConductionModel<Key: IncKVKeyType, State: ConductionState>: KeyedConductionModel<Key, State> {
    open override var modelWriteOnlyKeys: [Key] { return Key.all }
    open override var viewWriteOnlyKeys: [Key] { return Key.all }
 }
