@@ -24,38 +24,82 @@ public struct EmptyConductionState: ConductionState {
 
 public typealias ConductionObserverHandle = UInt
 
-open class ConductionStateObserver<State: ConductionState> {
-   // MARK: - Nested Types
-   public typealias ChangeBlock = (_ old: State, _ new: State) -> Void
+public protocol ConductionStateObserverType: class {
+   // MARK: - Associated Types
+   associatedtype State: ConductionState
    
-   // MARK: - Private Properties
-   private var _changeBlocks: [ConductionObserverHandle : ChangeBlock] = [:]
+   typealias StateChangeBlock = (_ old: State, _ new: State) -> Void
    
    // MARK: - Public Properties
-   public var state = State() {
+   var state: State { get }
+   var _stateChangeBlocks: [ConductionObserverHandle : StateChangeBlock] { get set }
+   
+   // MARK: - Public
+   @discardableResult func addStateObserver(_ changeBlock: @escaping StateChangeBlock) -> ConductionObserverHandle
+   
+   func removeStateObserver(handle: ConductionObserverHandle)
+   
+   func stateChanged(oldState: State?)
+}
+
+public extension ConductionStateObserverType {
+   @discardableResult public func addStateObserver(_ changeBlock: @escaping StateChangeBlock) -> ConductionObserverHandle {
+      return _stateChangeBlocks.add(newValue: changeBlock)
+   }
+   
+   public func removeStateObserver(handle: ConductionObserverHandle) {
+      _stateChangeBlocks[handle] = nil
+   }
+   
+   public func stateChanged(oldState: State? = nil) {
+      _stateChangeBlocks.forEach { $0.value(oldState ?? state, state) }
+   }
+}
+
+
+open class ConductionStateObserver<State: ConductionState>: ConductionStateObserverType {
+   // MARK: - Nested Types
+   public typealias StateChangeBlock = (_ old: State, _ new: State) -> Void
+   
+   // MARK: - Private Properties
+   public var _stateChangeBlocks: [ConductionObserverHandle : StateChangeBlock] = [:]
+   
+   // MARK: - Public Properties
+   public var state: State = State() {
       didSet { stateChanged(oldState: oldValue) }
    }
    
    // MARK: - Init
    public init() {}
-   
-   // MARK: - Public
-   @discardableResult public func addStateObserver(_ changeBlock: @escaping ChangeBlock) -> ConductionObserverHandle {
-      var handle: ConductionObserverHandle = 0
-      while _changeBlocks.keys.contains(handle) {
-         handle += 1
+}
+
+protocol ConductionObserverHandleType {
+   // MARK: - Public Properties
+   static var first: Self { get }
+   var next: Self { get }
+}
+
+extension ConductionObserverHandle: ConductionObserverHandleType {
+   static var first: ConductionObserverHandle { return 0 }
+   var next: ConductionObserverHandle { return self + 1 }
+}
+
+extension Dictionary where Key: ConductionObserverHandleType {
+   // MARK: - Public Properties
+   var nextHandle: Key {
+      var handle = Key.first
+      while self.keys.contains(handle) {
+         handle = handle.next
       }
-      
-      _changeBlocks[handle] = changeBlock
-      
+
       return handle
    }
    
-   public func removeStateObserver(handle: ConductionObserverHandle) {
-      _changeBlocks[handle] = nil
-   }
-   
-   public func stateChanged(oldState: State? = nil) {
-      _changeBlocks.forEach { $0.value(oldState ?? state, state) }
+   // MARK: - Public
+   mutating func add(newValue: Value) -> Key {
+      let newKey = nextHandle
+      self[newKey] = newValue
+      
+      return newKey
    }
 }

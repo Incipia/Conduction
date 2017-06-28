@@ -17,14 +17,48 @@ open class StaticConductionWrapper<DataModel> {
    }
 }
 
-open class StatelessConductionWrapper<DataModel> {
+public protocol ConductionWrapperObserver: class {
+   // MARK: - Associated Types
+   associatedtype DataModel
+   
+   typealias ModelChangeBlock = (_ old: DataModel, _ new: DataModel) -> Void
+   
    // MARK: - Public Properties
-   public var model: DataModel {
-      didSet { onChange?(oldValue, model) }
+   var model: DataModel { get }
+   var _modelChangeBlocks: [ConductionObserverHandle : ModelChangeBlock] { get set }
+   
+   // MARK: - Public
+   @discardableResult func addStateObserver(_ changeBlock: @escaping ModelChangeBlock) -> ConductionObserverHandle
+   
+   func removeModelObserver(handle: ConductionObserverHandle)
+   
+   func modelChanged(oldModel: DataModel?)
+}
+
+public extension ConductionWrapperObserver {
+   @discardableResult public func addStateObserver(_ changeBlock: @escaping ModelChangeBlock) -> ConductionObserverHandle {
+      return _modelChangeBlocks.add(newValue: changeBlock)
    }
    
-   public var onChange: ((DataModel, DataModel) -> Void)? {
-      didSet { onChange?(model, model) }
+   public func removeModelObserver(handle: ConductionObserverHandle) {
+      _modelChangeBlocks[handle] = nil
+   }
+   
+   public func modelChanged(oldModel: DataModel? = nil) {
+      _modelChangeBlocks.forEach { $0.value(oldModel ?? model, model) }
+   }
+}
+
+open class StatelessConductionWrapper<DataModel>: ConductionWrapperObserver {
+   // MARK: - Nested Types
+   public typealias ModelChangeBlock = (_ old: DataModel, _ new: DataModel) -> Void
+   
+   // MARK: - Private Properties
+   public var _modelChangeBlocks: [ConductionObserverHandle : ModelChangeBlock] = [:]
+
+   // MARK: - Public Properties
+   public var model: DataModel {
+      didSet { modelChanged(oldModel: oldValue) }
    }
    
    // MARK: - Init
@@ -33,19 +67,15 @@ open class StatelessConductionWrapper<DataModel> {
    }
 }
 
-open class ConductionWrapper<DataModel, State: ConductionState>: ConductionStateObserver<State> {
+open class ConductionWrapper<DataModel, State: ConductionState>: StatelessConductionWrapper<DataModel>, ConductionStateObserverType {
+   // MARK: - Nested Types
+   public typealias StateChangeBlock = (_ old: State, _ new: State) -> Void
+   
+   // MARK: - Private Properties
+   public var _stateChangeBlocks: [ConductionObserverHandle : StateChangeBlock] = [:]
+   
    // MARK: - Public Properties
-   public var model: DataModel {
-      didSet { onChange?(oldValue, model) }
-   }
-   
-   public var onChange: ((DataModel, DataModel) -> Void)? {
-      didSet { onChange?(model, model) }
-   }
-   
-   // MARK: - Init
-   public init(model: DataModel) {
-      self.model = model
-      super.init()
+   public var state: State = State() {
+      didSet { stateChanged(oldState: oldValue) }
    }
 }
