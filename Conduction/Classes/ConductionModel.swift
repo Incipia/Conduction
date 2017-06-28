@@ -9,7 +9,7 @@
 import Foundation
 import Bindable
 
-public protocol ConductionKeyObserver: class {
+public protocol ConductionKeyObserverType: class {
    // MARK: - Associated Types
    associatedtype Key
    
@@ -26,7 +26,7 @@ public protocol ConductionKeyObserver: class {
    func keyChanged(_ key: Key, oldValue: Any?, newValue: Any?)
 }
 
-public extension ConductionKeyObserver {
+public extension ConductionKeyObserverType {
    @discardableResult public func addKeyObserver(_ changeBlock: @escaping KeyChangeBlock) -> ConductionObserverHandle {
       return _keyChangeBlocks.add(newValue: changeBlock)
    }
@@ -40,7 +40,7 @@ public extension ConductionKeyObserver {
    }
 }
 
-open class ConductionModel<ModelKey: IncKVKeyType, Key: IncKVKeyType, State: ConductionState>: ConductionStateObserver<State>, Bindable, ConductionKeyObserver {
+open class ConductionModel<ModelKey: IncKVKeyType, Key: IncKVKeyType, State: ConductionState>: ConductionStateObserver<State>, Bindable, ConductionKeyObserverType {
    // MARK: - Nested Types
    public typealias KeyChangeBlock = (_ key: Key, _ oldValue: Any?, _ newValue: Any?) -> Void
 
@@ -340,7 +340,7 @@ protocol ConductionDataDelegate: class {
    func conductionData<DataKey>(_ conductionData: ConductionData<DataKey>, willSetValue value: inout Any?, for key: DataKey)
 }
 
-public class ConductionData<Key: IncKVKeyType>: Bindable, ConductionKeyObserver {
+public class ConductionData<Key: IncKVKeyType>: Bindable, ConductionKeyObserverType {
    // MARK: - Nested Types
    public typealias KeyChangeBlock = (_ key: Key, _ oldValue: Any?, _ newValue: Any?) -> Void
    

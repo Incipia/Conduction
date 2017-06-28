@@ -17,7 +17,7 @@ open class StaticConductionWrapper<DataModel> {
    }
 }
 
-public protocol ConductionWrapperObserver: class {
+public protocol ConductionWrapperObserverType: class {
    // MARK: - Associated Types
    associatedtype DataModel
    
@@ -35,7 +35,7 @@ public protocol ConductionWrapperObserver: class {
    func modelChanged(oldModel: DataModel?)
 }
 
-public extension ConductionWrapperObserver {
+public extension ConductionWrapperObserverType {
    @discardableResult public func addModelObserver(_ changeBlock: @escaping ModelChangeBlock) -> ConductionObserverHandle {
       return _modelChangeBlocks.add(newValue: changeBlock)
    }
@@ -49,7 +49,7 @@ public extension ConductionWrapperObserver {
    }
 }
 
-open class StatelessConductionWrapper<DataModel>: ConductionWrapperObserver {
+open class StatelessConductionWrapper<DataModel>: ConductionWrapperObserverType {
    // MARK: - Nested Types
    public typealias ModelChangeBlock = (_ old: DataModel, _ new: DataModel) -> Void
    
