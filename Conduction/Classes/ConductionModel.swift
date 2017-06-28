@@ -80,7 +80,6 @@ open class ConductionModel<ModelKey: IncKVKeyType, Key: IncKVKeyType, State: Con
       let conductedValue = try set(conductedValue: value, for: key)
       _values[key] = conductedValue
       didSet(conductedValue: conductedValue, with: &value, for: key)
-      valueChanged()
    }
 }
 
@@ -282,7 +281,6 @@ open class KeyedConductionModel<Key: IncKVKeyType, State: ConductionState>: Cond
       let conductedValue = try set(conductedValue: value, for: key)
       values[key] = conductedValue
       didSet(conductedValue: conductedValue, with: &value, for: key)
-      valueChanged()
    }
 }
 

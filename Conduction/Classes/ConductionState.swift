@@ -22,35 +22,40 @@ public struct EmptyConductionState: ConductionState {
    public init() {}
 }
 
+public typealias ConductionObserverHandle = UInt
+
 open class ConductionStateObserver<State: ConductionState> {
+   // MARK: - Nested Types
+   public typealias ChangeBlock = (_ old: State, _ new: State) -> Void
+   
+   // MARK: - Private Properties
+   private var _changeBlocks: [ConductionObserverHandle : ChangeBlock] = [:]
+   
    // MARK: - Public Properties
    public var state = State() {
       didSet { stateChanged(oldState: oldValue) }
-   }
-   
-   public var onStateChange: ((State, State) -> Void)? {
-      didSet { stateChanged() }
-   }
-   
-   public var onValueChange: (() -> Void)? {
-      didSet { valueChanged() }
-   }
-   
-   public var onChange: (() -> Void)? {
-      didSet { onChange?() }
    }
    
    // MARK: - Init
    public init() {}
    
    // MARK: - Public
-   public func stateChanged(oldState: State? = nil) {
-      onStateChange?(oldState ?? state, state)
-      onChange?()
+   @discardableResult public func addStateObserver(_ changeBlock: @escaping ChangeBlock) -> ConductionObserverHandle {
+      var handle: ConductionObserverHandle = 0
+      while _changeBlocks.keys.contains(handle) {
+         handle += 1
+      }
+      
+      _changeBlocks[handle] = changeBlock
+      
+      return handle
    }
    
-   public func valueChanged() {
-      onValueChange?()
-      onChange?()
+   public func removeStateObserver(handle: ConductionObserverHandle) {
+      _changeBlocks[handle] = nil
+   }
+   
+   public func stateChanged(oldState: State? = nil) {
+      _changeBlocks.forEach { $0.value(oldState ?? state, state) }
    }
 }

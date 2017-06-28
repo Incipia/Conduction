@@ -36,7 +36,11 @@ open class StatelessConductionWrapper<DataModel> {
 open class ConductionWrapper<DataModel, State: ConductionState>: ConductionStateObserver<State> {
    // MARK: - Public Properties
    public var model: DataModel {
-      didSet { valueChanged() }
+      didSet { onChange?(oldValue, model) }
+   }
+   
+   public var onChange: ((DataModel, DataModel) -> Void)? {
+      didSet { onChange?(model, model) }
    }
    
    // MARK: - Init
