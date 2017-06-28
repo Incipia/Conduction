@@ -177,9 +177,13 @@ public extension KeyedConductionModelType {
    }
 }
 
-open class KeyedConductionModel<Key: IncKVKeyType, State: ConductionState>: ConductionStateObserver<State>, KeyedConductionModelType {
+open class KeyedConductionModel<Key: IncKVKeyType, State: ConductionState>: ConductionStateObserver<State>, KeyedConductionModelType, ConductionKeyObserverType {
+   // MARK: - Nested Types
+   public typealias KeyChangeBlock = (_ key: Key, _ oldValue: Any?, _ newValue: Any?) -> Void
+   
    // MARK: Private Properties
    private var values: [Key : Any] = [:]
+   public var _keyChangeBlocks: [ConductionObserverHandle : KeyChangeBlock] = [:]
    
    // MARK: Public Properties
    open var modelReadOnlyKeys: [Key] { return [] }
@@ -314,10 +318,12 @@ open class KeyedConductionModel<Key: IncKVKeyType, State: ConductionState>: Cond
    
    public func setOwn(value: inout Any?, for key: Key) throws {
       guard viewKeys.contains(key) || modelReadKeys.contains(key) else { fatalError() }
+      let oldValue = values[key]
       willSet(conductedValue: value, for: key)
       let conductedValue = try set(conductedValue: value, for: key)
       values[key] = conductedValue
       didSet(conductedValue: conductedValue, with: &value, for: key)
+      keyChanged(key, oldValue: oldValue, newValue: value)
    }
 }
 
