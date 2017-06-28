@@ -9,6 +9,99 @@
 import Foundation
 import Bindable
 
+open class ConductionViewModel<ModelKey: IncKVKeyType, Key: IncKVKeyType, State: ConductionModelState>: ConductionStateModel<State>, Bindable {
+   // MARK: - Private Properties
+   private var _values: [Key : Any] = [:]
+   
+   // MARK: - Public Propertis
+   public var modelData = ConductionData<ModelKey>()
+   public var viewData = ConductionData<ModelKey>()
+   
+   // MARK: - Init
+   public override init() {
+      super.init()
+      
+      modelData.delegate = self
+      viewData.delegate = self
+   }
+   
+   public convenience init(model: StringBindable) {
+      self.init()
+      
+      try! bind(model: model)
+   }
+   
+   public convenience init(modelBindings: [Binding]) {
+      self.init()
+      
+      try! bind(modelBindings: modelBindings)
+   }
+   
+   // MARK: - Model Binding
+   public func bind(model: StringBindable) throws {
+      let modelBindings = ModelKey.all.map { return Binding(key: $0, target: model, targetKey: $0) }
+      try bind(modelBindings: modelBindings)
+   }
+   
+   public func bind(modelBindings: [Binding]) throws {
+      try modelBindings.forEach { try modelData.bind($0) }
+   }
+   
+   public func unbind(model: StringBindable) {
+      let modelBindings = ModelKey.all.map { return Binding(key: $0, target: model, targetKey: $0) }
+      unbind(modelBindings: modelBindings)
+   }
+   
+   public func unbind(modelBindings: [Binding]) {
+      modelBindings.forEach { modelData.unbind($0) }
+   }
+   
+   // MARK: - Subclass Hooks
+   open func conductedValue(_ value: Any?, for key: Key) -> Any? { return value }
+   open func set(conductedValue value: Any?, for key: Key) throws -> Any? { return value }
+   open func willSet(conductedValue value: Any?, for key: Key) {}
+   open func didSet(conductedValue: Any?, with value: inout Any?, for key: Key) {}
+   
+   open func conductViewValue(from modelValue: inout Any?, for key: ModelKey) -> Any? { return value }
+   open func didConductViewValue(from modelValue: Any?, for key: ModelKey) {}
+   
+   open func conductModelValue(from viewValue: inout Any?, for key: ModelKey) -> Any? { return value }
+   open func didConductModelValue(from viewValue: Any?, for key: ModelKey) {}
+   
+   // MARK: - Bindable Protocol
+   public static var bindableKeys: [Key] { return Key.all }
+   public var bindingBlocks: [Key : [((targetObject: AnyObject, rawTargetKey: String)?, Any?) throws -> Bool?]] = [:]
+   public var keysBeingSet: [Key] = []
+   
+   public func value(for key: Key) -> Any? {
+      let value = _values[key]
+      return conductedValue(value, for: key)
+   }
+   
+   public func setOwn(value: inout Any?, for key: Key) throws {
+      willSet(conductedValue: value, for: key)
+      let conductedValue = try set(conductedValue: value, for: key)
+      _values[key] = conductedValue
+      didSet(conductedValue: conductedValue, with: &value, for: key)
+      valueChanged()
+   }
+}
+
+extension ConductionViewModel: ConductionDataDelegate {
+   func conductionData<DataKey>(_ conductionData: ConductionData<DataKey>, willSetValue value: inout Any?, for key: DataKey) {
+      guard let key = key as? ModelKey else { fatalError() }
+      if conductionData === modelData {
+         viewData[key] = conductViewValue(from: &value, for: key)
+         didConductViewValue(from: value, for: key)
+      } else if conductionData === viewData {
+         modelData[key] = conductModelValue(from: &value, for: key)
+         didConductModelValue(from: value, for: key)
+      } else {
+         fatalError()
+      }
+   }
+}
+
 public protocol StringConductionModelType: StringBindable {
    // MARK: – Keys
    var modelReadKeyStrings: [String] { get }
@@ -48,55 +141,6 @@ public extension ConductionModelType {
    }
    var viewWriteKeyStrings: [String] {
       return viewWriteKeys.map { return $0.rawValue }
-   }
-   
-}
-
-public protocol ConductionModelState {
-   init()
-   mutating func update(_ block: (inout Self) -> Void)
-}
-
-extension ConductionModelState {
-   mutating public func update(_ block: (inout Self) -> Void) {
-      block(&self)
-   }
-}
-
-public struct ConductionModelEmptyState: ConductionModelState {
-   public init() {}
-}
-
-open class ConductionStateModel<State: ConductionModelState> {
-   // MARK: - Public Properties
-   public var state = State() {
-      didSet { stateChanged(oldState: oldValue) }
-   }
-   
-   public var onStateChange: ((State, State) -> Void)? {
-      didSet { stateChanged() }
-   }
-   
-   public var onValueChange: (() -> Void)? {
-      didSet { valueChanged() }
-   }
-
-   public var onChange: (() -> Void)? {
-      didSet { onChange?() }
-   }
-
-   // MARK: - Init
-   public init() {}
-   
-   // MARK: - Public
-   public func stateChanged(oldState: State? = nil) {
-      onStateChange?(oldState ?? state, state)
-      onChange?()
-   }
-   
-   public func valueChanged() {
-      onValueChange?()
-      onChange?()
    }
 }
 
@@ -264,53 +308,8 @@ open class WriteOnlyConductionModel<Key: IncKVKeyType, State: ConductionModelSta
    open override var viewWriteOnlyKeys: [Key] { return Key.all }
 }
 
-open class ConductionStateWrapper<DataModel, State: ConductionModelState>: ConductionStateModel<State> {
-   // MARK: - Public Properties
-   public var model: DataModel! {
-      didSet { valueChanged() }
-   }
-   
-   public var isEmpty: Bool { return model == nil }
-   
-   // MARK: - Init
-   public init(model: DataModel) {
-      self.model = model
-      super.init()
-   }
-}
-
-open class ConductionWrapper<DataModel> {
-   // MARK: - Public Properties
-   public var model: DataModel! {
-      didSet { onChange?() }
-   }
-   
-   public var onChange: (() -> Void)? {
-      didSet { onChange?() }
-   }
-   
-   public var isEmpty: Bool { return model == nil }
-   
-   // MARK: - Init
-   public init() {}
-   
-   public init(model: DataModel) {
-      self.model = model
-   }
-}
-
-open class ConductionDataWrapper<DataModel> {
-   // MARK: - Public Properties
-   public let model: DataModel
-   
-   // MARK: - Init
-   public init(model: DataModel) {
-      self.model = model
-   }
-}
-
 protocol ConductionDataDelegate: class {
-   func conductionData<DataKey: IncKVKeyType>(_ conductionData: ConductionData<DataKey>, willSetValue value: inout Any?, for key: DataKey)
+   func conductionData<DataKey>(_ conductionData: ConductionData<DataKey>, willSetValue value: inout Any?, for key: DataKey)
 }
 
 public class ConductionData<Key: IncKVKeyType>: Bindable {
@@ -331,98 +330,5 @@ public class ConductionData<Key: IncKVKeyType>: Bindable {
    public func setOwn(value: inout Any?, for key: Key) throws {
       delegate?.conductionData(self, willSetValue: &value, for: key)
       _values[key] = value
-   }
-}
-
-open class ConductionViewModel<ModelKey: IncKVKeyType, Key: IncKVKeyType, State: ConductionModelState>: ConductionStateModel<State>, Bindable {
-   // MARK: - Private Properties
-   private var _values: [Key : Any] = [:]
-   
-   // MARK: - Public Propertis
-   public var modelData = ConductionData<ModelKey>()
-   public var viewData = ConductionData<ModelKey>()
-
-   // MARK: - Init
-   public override init() {
-      super.init()
-      
-      modelData.delegate = self
-      viewData.delegate = self
-   }
-   
-   public convenience init(model: StringBindable) {
-      self.init()
-      
-      try! bind(model: model)
-   }
-   
-   public convenience init(modelBindings: [Binding]) {
-      self.init()
-
-      try! bind(modelBindings: modelBindings)
-   }
-   
-   // MARK: - Model Binding
-   public func bind(model: StringBindable) throws {
-      let modelBindings = ModelKey.all.map { return Binding(key: $0, target: model, targetKey: $0) }
-      try bind(modelBindings: modelBindings)
-   }
-   
-   public func bind(modelBindings: [Binding]) throws {
-      try modelBindings.forEach { try modelData.bind($0) }
-   }
-   
-   public func unbind(model: StringBindable) {
-      let modelBindings = ModelKey.all.map { return Binding(key: $0, target: model, targetKey: $0) }
-      unbind(modelBindings: modelBindings)
-   }
-   
-   public func unbind(modelBindings: [Binding]) {
-      modelBindings.forEach { modelData.unbind($0) }
-   }
-   
-   // MARK: - Subclass Hooks
-   open func conductedValue(_ value: Any?, for key: Key) -> Any? { return value }
-   open func set(conductedValue value: Any?, for key: Key) throws -> Any? { return value }
-   open func willSet(conductedValue value: Any?, for key: Key) {}
-   open func didSet(conductedValue: Any?, with value: inout Any?, for key: Key) {}
-   
-   open func conductViewValue(from modelValue: inout Any?, for key: ModelKey) -> Any? { return value }
-   open func didConductViewValue(from modelValue: Any?, for key: ModelKey) {}
-   
-   open func conductModelValue(from viewValue: inout Any?, for key: ModelKey) -> Any? { return value }
-   open func didConductModelValue(from viewValue: Any?, for key: ModelKey) {}
-   
-   // MARK: - Bindable Protocol
-   public static var bindableKeys: [Key] { return Key.all }
-   public var bindingBlocks: [Key : [((targetObject: AnyObject, rawTargetKey: String)?, Any?) throws -> Bool?]] = [:]
-   public var keysBeingSet: [Key] = []
-   
-   public func value(for key: Key) -> Any? {
-      let value = _values[key]
-      return conductedValue(value, for: key)
-   }
-   
-   public func setOwn(value: inout Any?, for key: Key) throws {
-      willSet(conductedValue: value, for: key)
-      let conductedValue = try set(conductedValue: value, for: key)
-      _values[key] = conductedValue
-      didSet(conductedValue: conductedValue, with: &value, for: key)
-      valueChanged()
-   }
-}
-
-extension ConductionViewModel: ConductionDataDelegate {
-   func conductionData<DataKey>(_ conductionData: ConductionData<DataKey>, willSetValue value: inout Any?, for key: DataKey) {
-      guard let key = key as? ModelKey else { fatalError() }
-      if conductionData === modelData {
-         viewData[key] = conductViewValue(from: &value, for: key)
-         didConductViewValue(from: value, for: key)
-      } else if conductionData === viewData {
-         modelData[key] = conductModelValue(from: &value, for: key)
-         didConductModelValue(from: value, for: key)
-      } else {
-         fatalError()
-      }
    }
 }
