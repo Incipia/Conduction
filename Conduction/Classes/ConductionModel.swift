@@ -9,7 +9,7 @@
 import Foundation
 import Bindable
 
-open class ConductionViewModel<ModelKey: IncKVKeyType, Key: IncKVKeyType, State: ConductionModelState>: ConductionStateModel<State>, Bindable {
+open class ConductionModel<ModelKey: IncKVKeyType, Key: IncKVKeyType, State: ConductionState>: ConductionStateObserver<State>, Bindable {
    // MARK: - Private Properties
    private var _values: [Key : Any] = [:]
    
@@ -20,20 +20,17 @@ open class ConductionViewModel<ModelKey: IncKVKeyType, Key: IncKVKeyType, State:
    // MARK: - Init
    public override init() {
       super.init()
-      
       modelData.delegate = self
       viewData.delegate = self
    }
    
    public convenience init(model: StringBindable) {
       self.init()
-      
       try! bind(model: model)
    }
    
    public convenience init(modelBindings: [Binding]) {
       self.init()
-      
       try! bind(modelBindings: modelBindings)
    }
    
@@ -87,7 +84,7 @@ open class ConductionViewModel<ModelKey: IncKVKeyType, Key: IncKVKeyType, State:
    }
 }
 
-extension ConductionViewModel: ConductionDataDelegate {
+extension ConductionModel: ConductionDataDelegate {
    func conductionData<DataKey>(_ conductionData: ConductionData<DataKey>, willSetValue value: inout Any?, for key: DataKey) {
       guard let key = key as? ModelKey else { fatalError() }
       if conductionData === modelData {
@@ -102,7 +99,7 @@ extension ConductionViewModel: ConductionDataDelegate {
    }
 }
 
-public protocol StringConductionModelType: StringBindable {
+public protocol StringKeyedConductionModelType: StringBindable {
    // MARK: – Keys
    var modelReadKeyStrings: [String] { get }
    var modelWriteKeyStrings: [String] { get }
@@ -110,13 +107,13 @@ public protocol StringConductionModelType: StringBindable {
    var viewWriteKeyStrings: [String] { get }
 }
 
-public extension StringConductionModelType {
+public extension StringKeyedConductionModelType {
    // MARK: - Keys
    var modelKeyStrings: [String] { return modelReadKeyStrings + modelWriteKeyStrings }
    var viewKeyStrings: [String] { return modelReadKeyStrings + modelWriteKeyStrings }
 }
 
-public protocol ConductionModelType: Bindable, StringConductionModelType {
+public protocol KeyedConductionModelType: Bindable, StringKeyedConductionModelType {
    // MARK: – Keys
    var modelReadKeys: [Key] { get }
    var modelWriteKeys: [Key] { get }
@@ -124,12 +121,12 @@ public protocol ConductionModelType: Bindable, StringConductionModelType {
    var viewWriteKeys: [Key] { get }
 }
 
-public extension ConductionModelType {
+public extension KeyedConductionModelType {
    // MARK: - Keys
    var modelKeys: [Key] { return modelReadKeys + modelWriteKeys }
    var viewKeys: [Key] { return viewReadKeys + viewWriteKeys }
 
-   // MARK: - StringConductionModelType Protocol
+   // MARK: - StringKeyedConductionModelType Protocol
    var modelReadKeyStrings: [String] {
       return modelReadKeys.map { return $0.rawValue }
    }
@@ -144,11 +141,7 @@ public extension ConductionModelType {
    }
 }
 
-public enum ConductionModelStateKey: String, IncKVKeyType {
-   case state
-}
-
-open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: ConductionStateModel<State>, ConductionModelType {
+open class KeyedConductionModel<Key: IncKVKeyType, State: ConductionState>: ConductionStateObserver<State>, KeyedConductionModelType {
    // MARK: Private Properties
    private var values: [Key : Any] = [:]
    
@@ -293,17 +286,17 @@ open class ConductionModel<Key: IncKVKeyType, State: ConductionModelState>: Cond
    }
 }
 
-open class ReadWriteConductionModel<Key: IncKVKeyType, State: ConductionModelState>: ConductionModel<Key, State> {
+open class ReadWriteConductionModel<Key: IncKVKeyType, State: ConductionState>: KeyedConductionModel<Key, State> {
    open override var modelReadWriteKeys: [Key] { return Key.all }
    open override var viewReadWriteKeys: [Key] { return Key.all }
 }
 
-open class ReadOnlyConductionModel<Key: IncKVKeyType, State: ConductionModelState>: ConductionModel<Key, State> {
+open class ReadOnlyConductionModel<Key: IncKVKeyType, State: ConductionState>: KeyedConductionModel<Key, State> {
    open override var modelReadOnlyKeys: [Key] { return Key.all }
    open override var viewReadOnlyKeys: [Key] { return Key.all }
 }
 
-open class WriteOnlyConductionModel<Key: IncKVKeyType, State: ConductionModelState>: ConductionModel<Key, State> {
+open class WriteOnlyConductionModel<Key: IncKVKeyType, State: ConductionState>: KeyedConductionModel<Key, State> {
    open override var modelWriteOnlyKeys: [Key] { return Key.all }
    open override var viewWriteOnlyKeys: [Key] { return Key.all }
 }

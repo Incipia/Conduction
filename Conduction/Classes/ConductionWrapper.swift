@@ -7,7 +7,7 @@
 
 import Foundation
 
-open class ConductionDataWrapper<DataModel> {
+open class StaticConductionWrapper<DataModel> {
    // MARK: - Public Properties
    public let model: DataModel
    
@@ -17,33 +17,27 @@ open class ConductionDataWrapper<DataModel> {
    }
 }
 
-open class ConductionWrapper<DataModel> {
+open class StatelessConductionWrapper<DataModel> {
    // MARK: - Public Properties
-   public var model: DataModel! {
-      didSet { onChange?() }
+   public var model: DataModel {
+      didSet { onChange?(oldValue, model) }
    }
    
-   public var onChange: (() -> Void)? {
-      didSet { onChange?() }
+   public var onChange: ((DataModel, DataModel) -> Void)? {
+      didSet { onChange?(model, model) }
    }
-   
-   public var isEmpty: Bool { return model == nil }
    
    // MARK: - Init
-   public init() {}
-   
    public init(model: DataModel) {
       self.model = model
    }
 }
 
-open class ConductionStateWrapper<DataModel, State: ConductionModelState>: ConductionStateModel<State> {
+open class ConductionWrapper<DataModel, State: ConductionState>: ConductionStateObserver<State> {
    // MARK: - Public Properties
-   public var model: DataModel! {
+   public var model: DataModel {
       didSet { valueChanged() }
    }
-   
-   public var isEmpty: Bool { return model == nil }
    
    // MARK: - Init
    public init(model: DataModel) {

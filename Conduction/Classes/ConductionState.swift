@@ -7,22 +7,22 @@
 
 import Foundation
 
-public protocol ConductionModelState {
+public protocol ConductionState {
    init()
    mutating func update(_ block: (inout Self) -> Void)
 }
 
-extension ConductionModelState {
+extension ConductionState {
    mutating public func update(_ block: (inout Self) -> Void) {
       block(&self)
    }
 }
 
-public struct ConductionModelEmptyState: ConductionModelState {
+public struct EmptyConductionState: ConductionState {
    public init() {}
 }
 
-open class ConductionStateModel<State: ConductionModelState> {
+open class ConductionStateObserver<State: ConductionState> {
    // MARK: - Public Properties
    public var state = State() {
       didSet { stateChanged(oldState: oldValue) }
