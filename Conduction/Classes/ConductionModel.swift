@@ -111,12 +111,12 @@ open class ConductionModel<ModelKey: IncKVKeyType, Key: IncKVKeyType, State: Con
    }
    
    public func setOwn(value: inout Any?, for key: Key) throws {
-      let oldValue = _values[key]
+      let oldValue = self[key]
       willSet(conductedValue: value, for: key)
       let conductedValue = try set(conductedValue: value, for: key)
       _values[key] = conductedValue
       didSet(conductedValue: conductedValue, with: &value, for: key)
-      keyChanged(key, oldValue: oldValue, newValue: conductedValue)
+      keyChanged(key, oldValue: oldValue, newValue: self[key])
    }
 }
 
@@ -318,12 +318,12 @@ open class KeyedConductionModel<Key: IncKVKeyType, State: ConductionState>: Cond
    
    public func setOwn(value: inout Any?, for key: Key) throws {
       guard viewKeys.contains(key) || modelReadKeys.contains(key) else { fatalError() }
-      let oldValue = values[key]
+      let oldValue = self[key]
       willSet(conductedValue: value, for: key)
       let conductedValue = try set(conductedValue: value, for: key)
       values[key] = conductedValue
       didSet(conductedValue: conductedValue, with: &value, for: key)
-      keyChanged(key, oldValue: oldValue, newValue: value)
+      keyChanged(key, oldValue: oldValue, newValue: self[key])
    }
 }
 
@@ -366,9 +366,9 @@ public class ConductionData<Key: IncKVKeyType>: Bindable, ConductionKeyObserverT
    }
    
    public func setOwn(value: inout Any?, for key: Key) throws {
-      let oldValue = _values[key]
+      let oldValue = self[key]
       delegate?.conductionData(self, willSetValue: &value, for: key)
       _values[key] = value
-      keyChanged(key, oldValue: oldValue, newValue: value)
+      keyChanged(key, oldValue: oldValue, newValue: self[key])
    }
 }
