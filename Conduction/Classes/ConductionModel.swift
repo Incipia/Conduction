@@ -289,7 +289,7 @@ open class KeyedConductionModel<Key: IncKVKeyType, State: ConductionState>: Cond
          try modelBindings.filter(key: $0).forEach { try self.set(value: $0.targetValue, for: $0.key) }
       }
       try modelWriteOnlyKeys.forEach {
-         try modelBindings.filter(key: $0).forEach { try $0.set(targetValue: self.value(for: $0.key)) }
+         try modelBindings.filter(key: $0).forEach { try $0.set(targetValue: self.value(for: $0.targetKey)) }
       }
    }
 
