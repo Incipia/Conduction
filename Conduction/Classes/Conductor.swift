@@ -122,7 +122,7 @@ open class TabConductor: Conductor {
 }
 
 extension Conductor: UINavigationControllerDelegate {
-   public func navigationController(_ navigationController: UINavigationController, willShow viewController: UIViewController, animated: Bool) {
+   open func navigationController(_ navigationController: UINavigationController, willShow viewController: UIViewController, animated: Bool) {
       // check to see if the navigation controller is popping to it's root view controller
       guard let rootViewController = rootViewController else { fatalError() }
       let previousDelegate = previousContextDelegate
@@ -138,7 +138,7 @@ extension Conductor: UINavigationControllerDelegate {
       previousDelegate?.navigationController?(navigationController, willShow: viewController, animated: animated)
    }
    
-   public func navigationController(_ navigationController: UINavigationController, didShow viewController: UIViewController, animated: Bool) {
+   open func navigationController(_ navigationController: UINavigationController, didShow viewController: UIViewController, animated: Bool) {
       weak var previousDelegate = previousContextDelegate
       defer {
          previousDelegate?.navigationController?(navigationController, didShow: viewController, animated: animated)
@@ -160,11 +160,11 @@ extension Conductor: UINavigationControllerDelegate {
       }
    }
    
-   public func navigationController(_ navigationController: UINavigationController, interactionControllerFor animationController: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
+   open func navigationController(_ navigationController: UINavigationController, interactionControllerFor animationController: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
       return previousContextDelegate?.navigationController?(navigationController, interactionControllerFor: animationController)
    }
    
-   public func navigationController(_ navigationController: UINavigationController, animationControllerFor operation: UINavigationControllerOperation, from fromVC: UIViewController, to toVC: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+   open func navigationController(_ navigationController: UINavigationController, animationControllerFor operation: UINavigationControllerOperation, from fromVC: UIViewController, to toVC: UIViewController) -> UIViewControllerAnimatedTransitioning? {
       return previousContextDelegate?.navigationController?(navigationController, animationControllerFor: operation, from: fromVC, to: toVC)
    }
    
