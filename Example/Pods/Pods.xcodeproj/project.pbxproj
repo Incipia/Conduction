@@ -25,6 +25,8 @@
 		CE910782B35BFD8CA0F824D1C16E83FC /* ConductionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 866ED6F6AD3542A1C30196F3AF0E17EF /* ConductionModel.swift */; };
 		E3ADED5B31234F45B77718BFD5379706 /* Conductor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43D727143668405D96652F4E552973CC /* Conductor.swift */; };
 		E5F624BF28A038AC7A81A171FE7CEECD /* Conduction-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D5B0DFE56B6AAD82D527DFA04010D64 /* Conduction-dummy.m */; };
+		E9EB44E01F1FC17C00FC66E7 /* ConductionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9EB44DE1F1FC17C00FC66E7 /* ConductionState.swift */; };
+		E9EB44E11F1FC17C00FC66E7 /* ConductionWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9EB44DF1F1FC17C00FC66E7 /* ConductionWrapper.swift */; };
 		EEE045BC51CDD8E7A905767F4BF83F1B /* Pods-Conduction_Example-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = BDA19D188F6B657946E8700DCC1C9941 /* Pods-Conduction_Example-dummy.m */; };
 		FD3F9A18CCC1172D6E11983A1FA775EB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7C03BFAD1B279C244D9169E5DFCCB41 /* Foundation.framework */; };
 		FECB2B6AF73B3B7F768537E362AB3ED4 /* Bindable-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 930F1623AAD5A9B0A00C89690D4EE7FF /* Bindable-dummy.m */; };
@@ -59,9 +61,9 @@
 		0128418F4FC86378688F17FA3ACD3264 /* Pods-Conduction_Example-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-Conduction_Example-acknowledgements.markdown"; sourceTree = "<group>"; };
 		033D926D46EFFECCEB03AC6293349CF9 /* Pods-Conduction_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-Conduction_Tests.debug.xcconfig"; sourceTree = "<group>"; };
 		07520315C5AB1B2945FDF35E34646C0E /* Bindable.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Bindable.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		0B31238D779B28A2BA60937D20503B77 /* Bindable.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = Bindable.framework; path = Bindable.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		0B31238D779B28A2BA60937D20503B77 /* Bindable.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Bindable.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0E164F1CFCCC04267E3AEBFA79A07BC8 /* Bindable.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Bindable.xcconfig; sourceTree = "<group>"; };
-		16594B96F0DB88338A2B1500A0D896E8 /* Pods-Conduction_Tests.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; path = "Pods-Conduction_Tests.modulemap"; sourceTree = "<group>"; };
+		16594B96F0DB88338A2B1500A0D896E8 /* Pods-Conduction_Tests.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = "sourcecode.module-map"; path = "Pods-Conduction_Tests.modulemap"; sourceTree = "<group>"; };
 		2000921B4F4710617460A5289A7CB006 /* Pods-Conduction_Tests-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Pods-Conduction_Tests-dummy.m"; sourceTree = "<group>"; };
 		262CDBC3CE3B3726B45FCA69176A8E7A /* KVStringCompliance.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KVStringCompliance.swift; path = Bindable/Classes/KeyValue/KVStringCompliance.swift; sourceTree = "<group>"; };
 		27344A9119832239E4598EF5339B3E47 /* KVCompliance.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = KVCompliance.swift; path = Bindable/Classes/KeyValue/KVCompliance.swift; sourceTree = "<group>"; };
@@ -72,19 +74,19 @@
 		43DF0670BD2151EFE5E9CCACB511538D /* StringBindable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = StringBindable.swift; path = Bindable/Classes/StringBindable.swift; sourceTree = "<group>"; };
 		44C62BF23272389A2C4B4ED9264D4A27 /* Conduction.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = Conduction.xcconfig; sourceTree = "<group>"; };
 		4D5B0DFE56B6AAD82D527DFA04010D64 /* Conduction-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Conduction-dummy.m"; sourceTree = "<group>"; };
-		501B29B4B3BB4BEAD01480FDA42894D5 /* Conduction.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; path = Conduction.modulemap; sourceTree = "<group>"; };
+		501B29B4B3BB4BEAD01480FDA42894D5 /* Conduction.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = "sourcecode.module-map"; path = Conduction.modulemap; sourceTree = "<group>"; };
 		5405DFD89783EC93360633011600AC8B /* Pods-Conduction_Tests-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-Conduction_Tests-frameworks.sh"; sourceTree = "<group>"; };
-		5701671EE55F19B8C4B63FB2C4A0908D /* Pods_Conduction_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = Pods_Conduction_Tests.framework; path = "Pods-Conduction_Tests.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		5701671EE55F19B8C4B63FB2C4A0908D /* Pods_Conduction_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Conduction_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		608CD77472E67FFE64196C6124021B43 /* Pods-Conduction_Tests-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-Conduction_Tests-acknowledgements.plist"; sourceTree = "<group>"; };
-		60C6616B2B2D8C7B9009E1AB0E6DADBA /* Bindable.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; path = Bindable.modulemap; sourceTree = "<group>"; };
+		60C6616B2B2D8C7B9009E1AB0E6DADBA /* Bindable.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = "sourcecode.module-map"; path = Bindable.modulemap; sourceTree = "<group>"; };
 		689F1834D1E3A5237ED73B4448F69405 /* Pods-Conduction_Example-acknowledgements.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "Pods-Conduction_Example-acknowledgements.plist"; sourceTree = "<group>"; };
 		7FC5BB51BC09E2920B8AF0B6689F1A0D /* Pods-Conduction_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-Conduction_Example.debug.xcconfig"; sourceTree = "<group>"; };
 		855E4F12FEF7D0EE32096197074E3A92 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		866ED6F6AD3542A1C30196F3AF0E17EF /* ConductionModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConductionModel.swift; sourceTree = "<group>"; };
 		897CE52C4BA822E27FA26D56E343F9D7 /* Pods-Conduction_Tests-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-Conduction_Tests-umbrella.h"; sourceTree = "<group>"; };
 		930F1623AAD5A9B0A00C89690D4EE7FF /* Bindable-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Bindable-dummy.m"; sourceTree = "<group>"; };
-		93A4A3777CF96A4AAC1D13BA6DCCEA73 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; lastKnownFileType = text; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
-		9BB2FE919076D0B1F4D8B529A288FD21 /* Pods_Conduction_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = Pods_Conduction_Example.framework; path = "Pods-Conduction_Example.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		93A4A3777CF96A4AAC1D13BA6DCCEA73 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		9BB2FE919076D0B1F4D8B529A288FD21 /* Pods_Conduction_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Conduction_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A5AF9450D9B04CF3725692D6308B1885 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A7C03BFAD1B279C244D9169E5DFCCB41 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS10.3.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		BA5B488DD2413ED3290A5F97A9C09199 /* Conduction-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Conduction-umbrella.h"; sourceTree = "<group>"; };
@@ -94,12 +96,14 @@
 		C7630CCE7CE8709D8B02EB139AB049D9 /* Pods-Conduction_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-Conduction_Example.release.xcconfig"; sourceTree = "<group>"; };
 		C7EC59D27DD68E3D535A0B7F4DC550AD /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CC2336C3E1141D288ABBA947DFD94248 /* Pods-Conduction_Tests-resources.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-Conduction_Tests-resources.sh"; sourceTree = "<group>"; };
-		D2F9C22DC532BA34A6D66B68CB7840CE /* Conduction.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = Conduction.framework; path = Conduction.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D2F9C22DC532BA34A6D66B68CB7840CE /* Conduction.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Conduction.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D6B0233D9B5BB9A1B3ACA40C16E9033E /* Pods-Conduction_Example-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-Conduction_Example-frameworks.sh"; sourceTree = "<group>"; };
 		D815EF10053DA154E8A34A0BA590261B /* JSONRepresentable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = JSONRepresentable.swift; path = Bindable/Classes/JSON/JSONRepresentable.swift; sourceTree = "<group>"; };
 		E1E0E441494B442DF9271716FBCF8283 /* Pods-Conduction_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-Conduction_Tests.release.xcconfig"; sourceTree = "<group>"; };
 		E2CA3163B3DCE099AC54D1A6CBB237E0 /* Bindable-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Bindable-umbrella.h"; sourceTree = "<group>"; };
-		EE85D906F91F0C640124AB966D465CFA /* Pods-Conduction_Example.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; path = "Pods-Conduction_Example.modulemap"; sourceTree = "<group>"; };
+		E9EB44DE1F1FC17C00FC66E7 /* ConductionState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConductionState.swift; sourceTree = "<group>"; };
+		E9EB44DF1F1FC17C00FC66E7 /* ConductionWrapper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConductionWrapper.swift; sourceTree = "<group>"; };
+		EE85D906F91F0C640124AB966D465CFA /* Pods-Conduction_Example.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = "sourcecode.module-map"; path = "Pods-Conduction_Example.modulemap"; sourceTree = "<group>"; };
 		F12CC5825688723152699EC0335EF6E4 /* JSONInitable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = JSONInitable.swift; path = Bindable/Classes/JSON/JSONInitable.swift; sourceTree = "<group>"; };
 		FAE89A4FE9E7475DAB468014C53C0C4A /* Bindable-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Bindable-prefix.pch"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -160,7 +164,6 @@
 				43DF0670BD2151EFE5E9CCACB511538D /* StringBindable.swift */,
 				C04239B09D9FFAC1273EA5C5F41D7868 /* Support Files */,
 			);
-			name = Bindable;
 			path = Bindable;
 			sourceTree = "<group>";
 		};
@@ -198,10 +201,11 @@
 		5C9FA19C74939CF2A79796C7C09807DB /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				E9EB44DE1F1FC17C00FC66E7 /* ConductionState.swift */,
+				E9EB44DF1F1FC17C00FC66E7 /* ConductionWrapper.swift */,
 				866ED6F6AD3542A1C30196F3AF0E17EF /* ConductionModel.swift */,
 				43D727143668405D96652F4E552973CC /* Conductor.swift */,
 			);
-			name = Classes;
 			path = Classes;
 			sourceTree = "<group>";
 		};
@@ -291,7 +295,6 @@
 			children = (
 				5C9FA19C74939CF2A79796C7C09807DB /* Classes */,
 			);
-			name = Conduction;
 			path = Conduction;
 			sourceTree = "<group>";
 		};
@@ -485,11 +488,13 @@
 			files = (
 				FECB2B6AF73B3B7F768537E362AB3ED4 /* Bindable-dummy.m in Sources */,
 				07EC025A2FDDF447422DE420A2D83139 /* Bindable.swift in Sources */,
+				E9EB44E11F1FC17C00FC66E7 /* ConductionWrapper.swift in Sources */,
 				41337ED65B52C9BE0170C4D9F25ECCCD /* JSONInitable.swift in Sources */,
 				76BC3E3C9FC70A927200233F1EAC1232 /* JSONRepresentable.swift in Sources */,
 				7AF14067663D726742A1452698FA4DC4 /* KVCompliance.swift in Sources */,
 				6EDE5748CAB312DE7B14A2402D7E1CAF /* KVStringCompliance.swift in Sources */,
 				CE87987DC9B94B215955FE3C46C015FA /* StringBindable.swift in Sources */,
+				E9EB44E01F1FC17C00FC66E7 /* ConductionState.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
