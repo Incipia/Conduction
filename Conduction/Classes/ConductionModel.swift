@@ -182,7 +182,7 @@ open class KeyedConductionModel<Key: IncKVKeyType, State: ConductionState>: Cond
    public typealias KeyChangeBlock = (_ key: Key, _ oldValue: Any?, _ newValue: Any?) -> Void
    
    // MARK: Private Properties
-   private var values: [Key : Any] = [:]
+   private var _values: [Key : Any] = [:]
    public var _keyChangeBlocks: [ConductionObserverHandle : KeyChangeBlock] = [:]
    
    // MARK: Public Properties
@@ -311,17 +311,15 @@ open class KeyedConductionModel<Key: IncKVKeyType, State: ConductionState>: Cond
    public var keysBeingSet: [Key] = []
    
    public func value(for key: Key) -> Any? {
-      guard viewReadKeys.contains(key) || modelKeys.contains(key) else { fatalError() }
-      let value = values[key]
+      let value = _values[key]
       return conductedValue(value, for: key)
    }
    
    public func setOwn(value: inout Any?, for key: Key) throws {
-      guard viewKeys.contains(key) || modelReadKeys.contains(key) else { fatalError() }
       let oldValue = self[key]
       willSet(conductedValue: value, for: key)
       let conductedValue = try set(conductedValue: value, for: key)
-      values[key] = conductedValue
+      _values[key] = conductedValue
       didSet(conductedValue: conductedValue, with: &value, for: key)
       keyChanged(key, oldValue: oldValue, newValue: self[key])
    }
