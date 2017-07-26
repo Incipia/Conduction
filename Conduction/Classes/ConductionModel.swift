@@ -340,6 +340,145 @@ open class WriteOnlyKeyedConductionModel<Key: IncKVKeyType, State: ConductionSta
    open override var viewWriteOnlyKeys: [Key] { return Key.all }
 }
 
+public protocol ConductionSyncModelDelegate: class {
+   func saveKeys<Key: IncKVKeyType, State: ConductionState>(_ keys: [Key], forModel model: ConductionSyncModel<Key, State>, completion: ((_ savedKeys: [Key]) -> Void)?)
+   func loadKeys<Key: IncKVKeyType, State: ConductionState>(_ keys: [Key], forModel model: ConductionSyncModel<Key, State>, completion: ((_ loadedKeys: [Key]) -> Void)?)
+   func cancelSavingKeys<Key: IncKVKeyType, State: ConductionState>(_ keys: [Key], forModel model: ConductionSyncModel<Key, State>, completion: ((_ cancelledKeys: [Key]) -> Void)?)
+   func cancelLoadingKeys<Key: IncKVKeyType, State: ConductionState>(_ keys: [Key], forModel model: ConductionSyncModel<Key, State>, completion: ((_ cancelledKeys: [Key]) -> Void)?)
+}
+
+public extension ConductionSyncModelDelegate {
+   func saveKeys<Key: IncKVKeyType, State: ConductionState>(_ keys: [Key], forModel model: ConductionSyncModel<Key, State>, completion: ((_ savedKeys: [Key]) -> Void)?) {
+      completion?([])
+   }
+   func loadKeys<Key: IncKVKeyType, State: ConductionState>(_ keys: [Key], forModel model: ConductionSyncModel<Key, State>, completion: ((_ loadedKeys: [Key]) -> Void)?) {
+      completion?([])
+   }
+   func cancelLoadingKeys<Key: IncKVKeyType, State: ConductionState>(_ keys: [Key], forModel model: ConductionSyncModel<Key, State>, completion: ((_ cancelledKeys: [Key]) -> Void)?) {
+      completion?([])
+   }
+}
+
+open class ConductionSyncModel<Key: IncKVKeyType, State: ConductionState>: KeyedConductionModel<Key, State> {
+   // MARK: - Private Properties
+   private var _saveTimer: Timer?
+   private var _loadTimer: Timer?
+   
+   // MARK: - Public Properties
+   public private(set) var savingKeys: [Key] = []
+   public private(set) var loadingKeys: [Key] = []
+   public private(set) var cancellingSavingKeys: [Key] = []
+   public private(set) var cancellingLoadingKeys: [Key] = []
+   public var busyKeys: [Key] { return savingKeys + loadingKeys }
+   open var dirtyKeys: [Key] { return Key.all.filter { self.keyIsDirty($0) } }
+   public weak var syncDelegate: ConductionSyncModelDelegate? {
+      didSet {
+         setSaveTimer()
+         setLoadTimer()
+      }
+   }
+   
+   // MARK: - Subclass Hooks
+   open func keyIsDirty(_ key: Key) -> Bool {
+      return false
+   }
+   
+   open func cleanKey(_ key: Key) {}
+   
+   open func saveInterval(key: Key, setInterval: TimeInterval?) -> TimeInterval? { return nil }
+   
+   open func loadInterval(key: Key, setInterval: TimeInterval?) -> TimeInterval? { return nil }
+   
+   open func willSave(keys: inout [Key]) {}
+   
+   open func didSave(keys: [Key], attemptedKeys: [Key]) {}
+
+   open func willLoad(keys: inout [Key]) {}
+
+   open func didLoad(keys: [Key], attemptedKeys: [Key]) {}
+   
+   open func willCancelSaving(keys: inout [Key]) {}
+   
+   open func didCancelSaving(keys: [Key], attemptedKeys: [Key]) {}
+
+   open func willCancelLoading(keys: inout [Key]) {}
+   
+   open func didCancelLoading(_ keys: [Key], attemptedKeys: [Key]) {}
+   
+   // MARK: - Public
+   @objc public func save() {
+      var keys = dirtyKeys.filter { !busyKeys.contains($0) }
+      guard !keys.isEmpty else { return }
+      willSave(keys: &keys)
+      guard let syncDelegate = syncDelegate, !keys.isEmpty else {
+         didSave(keys: [], attemptedKeys: keys)
+         return
+      }
+      savingKeys.append(contentsOf: keys)
+      syncDelegate.saveKeys(keys, forModel: self) { [weak self] savedKeys in
+         guard let strongSelf = self else { return }
+         strongSelf.savingKeys = strongSelf.savingKeys.filter { !savedKeys.contains($0) }
+         strongSelf.didSave(keys: savedKeys, attemptedKeys: keys)
+         strongSelf.setSaveTimer()
+      }
+      setSaveTimer()
+   }
+   
+   public func cancelSaving(keys: [Key]) {
+      var keys = keys.filter { self.savingKeys.contains($0) && !self.cancellingSavingKeys.contains($0) }
+      guard !keys.isEmpty else { return }
+      willCancelSaving(keys: &keys)
+      guard let syncDelegate = syncDelegate, !keys.isEmpty else {
+         didCancelSaving(keys: [], attemptedKeys: keys)
+         return
+      }
+      syncDelegate.cancelSavingKeys(keys, forModel: self) { [weak self] cancelledKeys in
+         guard let strongSelf = self else { return }
+         strongSelf.savingKeys = strongSelf.savingKeys.filter { !cancelledKeys.contains($0) }
+         strongSelf.cancellingSavingKeys = strongSelf.cancellingSavingKeys.filter { !cancelledKeys.contains($0) }
+         strongSelf.didCancelSaving(keys: cancelledKeys, attemptedKeys: keys)
+         strongSelf.setSaveTimer()
+      }
+   }
+   
+   public func load() {
+      fatalError()
+   }
+   
+   public func setSaveTimer() {
+      var interval: TimeInterval? = nil
+      let setInterval: TimeInterval? = _saveTimer?.isValid ?? false ? max(_saveTimer!.fireDate.timeIntervalSinceNow, 0.0) : nil
+      
+      defer {
+         if interval != setInterval {
+            if let saveTimer = _saveTimer, saveTimer.isValid {
+               saveTimer.invalidate()
+            }
+            if let interval = interval {
+               _saveTimer = Timer.scheduledTimer(timeInterval: interval, target: self, selector: #selector(ConductionSyncModel.save), userInfo: nil, repeats: false)
+            } else {
+               _saveTimer = nil
+            }
+         }
+      }
+      
+      guard let syncDelegate = syncDelegate else { return }
+      
+      interval = Set(dirtyKeys).subtracting(Set(busyKeys)).flatMap { return saveInterval(key: $0, setInterval: setInterval) }.min()
+   }
+
+   public func setLoadTimer() {
+      print("set load timer not yet implemented")
+   }
+   
+   // MARK: - Overridden
+   public override func setOwn(value: inout Any?, for key: Key) throws {
+      try super.setOwn(value: &value, for: key)
+      setSaveTimer()
+      setLoadTimer()
+   }
+}
+
 protocol ConductionDataDelegate: class {
    func conductionData<DataKey>(_ conductionData: ConductionData<DataKey>, willSetValue value: inout Any?, for key: DataKey)
 }
