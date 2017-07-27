@@ -235,6 +235,17 @@ open class KeyedConductionModel<Key: IncKVKeyType, State: ConductionState>: Cond
    }
 
    // MARK: - Public
+   public func resetKeys(_ keys: [Key]? = nil) {
+      let keys = keys ?? Key.all
+      keys.forEach { self[$0] = nil }
+   }
+   
+   public func resetAll() {
+      resetKeys()
+      _values.removeAll()
+      resetState()
+   }
+   
    public func value<T>(for key: Key, default defaultValue: T?) -> T? {
       return value(for: key) as? T ?? defaultValue
    }

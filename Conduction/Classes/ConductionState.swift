@@ -71,6 +71,11 @@ open class ConductionStateObserver<State: ConductionState>: ConductionStateObser
    
    // MARK: - Init
    public init() {}
+   
+   // MARK: - Public
+   public func resetState() {
+      state = State()
+   }
 }
 
 protocol ConductionObserverHandleType {
