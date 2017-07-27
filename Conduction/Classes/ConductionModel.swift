@@ -341,25 +341,32 @@ open class WriteOnlyKeyedConductionModel<Key: IncKVKeyType, State: ConductionSta
 }
 
 public protocol ConductionSyncModelDelegate: class {
-   func saveKeys<Key: IncKVKeyType, State: ConductionState>(_ keys: [Key], forModel model: ConductionSyncModel<Key, State>, completion: ((_ savedKeys: [Key]) -> Void)?)
-   func loadKeys<Key: IncKVKeyType, State: ConductionState>(_ keys: [Key], forModel model: ConductionSyncModel<Key, State>, completion: ((_ loadedKeys: [Key]) -> Void)?)
-   func cancelSavingKeys<Key: IncKVKeyType, State: ConductionState>(_ keys: [Key], forModel model: ConductionSyncModel<Key, State>, completion: ((_ cancelledKeys: [Key]) -> Void)?)
-   func cancelLoadingKeys<Key: IncKVKeyType, State: ConductionState>(_ keys: [Key], forModel model: ConductionSyncModel<Key, State>, completion: ((_ cancelledKeys: [Key]) -> Void)?)
+   func saveKeys<Model: ConductionSyncModelType>(_ keys: [Model.Key], forModel model: Model, completion: ((_ savedKeys: [Model.Key]) -> Void)?)
+   func loadKeys<Model: ConductionSyncModelType>(_ keys: [Model.Key], forModel model: Model, completion: ((_ loadedKeys: [Model.Key]) -> Void)?)
+   func cancelSavingKeys<Model: ConductionSyncModelType>(_ keys: [Model.Key], forModel model: Model, completion: ((_ cancelledKeys: [Model.Key]) -> Void)?)
+   func cancelLoadingKeys<Model: ConductionSyncModelType>(_ keys: [Model.Key], forModel model: Model, completion: ((_ cancelledKeys: [Model.Key]) -> Void)?)
 }
 
 public extension ConductionSyncModelDelegate {
-   func saveKeys<Key: IncKVKeyType, State: ConductionState>(_ keys: [Key], forModel model: ConductionSyncModel<Key, State>, completion: ((_ savedKeys: [Key]) -> Void)?) {
+   func saveKeys<Model: ConductionSyncModelType>(_ keys: [Model.Key], forModel model: Model, completion: ((_ savedKeys: [Model.Key]) -> Void)?) {
       completion?([])
    }
-   func loadKeys<Key: IncKVKeyType, State: ConductionState>(_ keys: [Key], forModel model: ConductionSyncModel<Key, State>, completion: ((_ loadedKeys: [Key]) -> Void)?) {
+   func loadKeys<Model: ConductionSyncModelType>(_ keys: [Model.Key], forModel model: Model, completion: ((_ loadedKeys: [Model.Key]) -> Void)?) {
       completion?([])
    }
-   func cancelLoadingKeys<Key: IncKVKeyType, State: ConductionState>(_ keys: [Key], forModel model: ConductionSyncModel<Key, State>, completion: ((_ cancelledKeys: [Key]) -> Void)?) {
+   func cancelSavingKeys<Model: ConductionSyncModelType>(_ keys: [Model.Key], forModel model: Model, completion: ((_ cancelledKeys: [Model.Key]) -> Void)?) {
+      completion?([])
+   }
+   func cancelLoadingKeys<Model: ConductionSyncModelType>(_ keys: [Model.Key], forModel model: Model, completion: ((_ cancelledKeys: [Model.Key]) -> Void)?) {
       completion?([])
    }
 }
 
-open class ConductionSyncModel<Key: IncKVKeyType, State: ConductionState>: KeyedConductionModel<Key, State> {
+public protocol ConductionSyncModelType: KeyedConductionModelType {
+   var dirtyKeys: [Key] { get }
+}
+
+open class ConductionSyncModel<Key: IncKVKeyType, State: ConductionState>: KeyedConductionModel<Key, State>, ConductionSyncModelType {
    // MARK: - Private Properties
    private var _saveTimer: Timer?
    private var _loadTimer: Timer?
@@ -406,8 +413,10 @@ open class ConductionSyncModel<Key: IncKVKeyType, State: ConductionState>: Keyed
    open func didCancelLoading(_ keys: [Key], attemptedKeys: [Key]) {}
    
    // MARK: - Public
-   @objc public func save() {
-      var keys = dirtyKeys.filter { !busyKeys.contains($0) }
+   @objc public func save() { saveKeys(dirtyKeys) }
+   
+   public func saveKeys(_ keys: [Key]) {
+      var keys = keys.filter { dirtyKeys.contains($0) && !busyKeys.contains($0) }
       guard !keys.isEmpty else { return }
       willSave(keys: &keys)
       guard let syncDelegate = syncDelegate, !keys.isEmpty else {
@@ -417,14 +426,16 @@ open class ConductionSyncModel<Key: IncKVKeyType, State: ConductionState>: Keyed
       savingKeys.append(contentsOf: keys)
       syncDelegate.saveKeys(keys, forModel: self) { [weak self] savedKeys in
          guard let strongSelf = self else { return }
-         strongSelf.savingKeys = strongSelf.savingKeys.filter { !savedKeys.contains($0) }
+         strongSelf.savingKeys = []
          strongSelf.didSave(keys: savedKeys, attemptedKeys: keys)
          strongSelf.setSaveTimer()
       }
       setSaveTimer()
    }
    
-   public func cancelSaving(keys: [Key]) {
+   @objc public func cancelSaving() { cancelSavingKeys(savingKeys) }
+   
+   public func cancelSavingKeys(_ keys: [Key]) {
       var keys = keys.filter { self.savingKeys.contains($0) && !self.cancellingSavingKeys.contains($0) }
       guard !keys.isEmpty else { return }
       willCancelSaving(keys: &keys)
@@ -435,17 +446,13 @@ open class ConductionSyncModel<Key: IncKVKeyType, State: ConductionState>: Keyed
       syncDelegate.cancelSavingKeys(keys, forModel: self) { [weak self] cancelledKeys in
          guard let strongSelf = self else { return }
          strongSelf.savingKeys = strongSelf.savingKeys.filter { !cancelledKeys.contains($0) }
-         strongSelf.cancellingSavingKeys = strongSelf.cancellingSavingKeys.filter { !cancelledKeys.contains($0) }
+         strongSelf.cancellingSavingKeys = []
          strongSelf.didCancelSaving(keys: cancelledKeys, attemptedKeys: keys)
          strongSelf.setSaveTimer()
       }
    }
    
-   public func load() {
-      fatalError()
-   }
-   
-   public func setSaveTimer() {
+   @objc public func setSaveTimer() {
       var interval: TimeInterval? = nil
       let setInterval: TimeInterval? = _saveTimer?.isValid ?? false ? max(_saveTimer!.fireDate.timeIntervalSinceNow, 0.0) : nil
       
@@ -467,6 +474,10 @@ open class ConductionSyncModel<Key: IncKVKeyType, State: ConductionState>: Keyed
       interval = Set(dirtyKeys).subtracting(Set(busyKeys)).flatMap { return saveInterval(key: $0, setInterval: setInterval) }.min()
    }
 
+   public func load() {
+      fatalError()
+   }
+   
    public func setLoadTimer() {
       print("set load timer not yet implemented")
    }
