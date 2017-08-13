@@ -94,10 +94,10 @@ open class ConductionModel<ModelKey: IncKVKeyType, Key: IncKVKeyType, State: Con
    open func willSet(conductedValue value: Any?, for key: Key) {}
    open func didSet(conductedValue: Any?, with value: inout Any?, for key: Key) {}
    
-   open func conductViewValue(from modelValue: inout Any?, for key: ModelKey) -> Any? { return value }
+   open func conductViewValue(from modelValue: inout Any?, for key: ModelKey) -> Any? { return modelValue }
    open func didConductViewValue(from modelValue: Any?, for key: ModelKey) {}
    
-   open func conductModelValue(from viewValue: inout Any?, for key: ModelKey) -> Any? { return value }
+   open func conductModelValue(from viewValue: inout Any?, for key: ModelKey) -> Any? { return viewValue }
    open func didConductModelValue(from viewValue: Any?, for key: ModelKey) {}
    
    // MARK: - Bindable Protocol
