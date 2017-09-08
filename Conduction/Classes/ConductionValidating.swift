@@ -66,7 +66,9 @@ public protocol ConductionValidating {
 
 public protocol KVConductionValidating: ConductionValidating, IncKVCompliance {
    func keyPassesDefaultValidation(_  key: Key) -> Bool
+   func validationErrorMessageForKey(_  key: Key) -> String?
    var consistencyErrorKeyGroups: [[Key]] { get }
+   var consistencyErrorMessages: [(keys: [Key], message: String)] { get }
    var validatingKeys: [Key] { get }
    var validationContext: String { get }
    var errorsForKeys: [String : ConductionValidationError] { get }
@@ -74,7 +76,11 @@ public protocol KVConductionValidating: ConductionValidating, IncKVCompliance {
 
 public extension KVConductionValidating {
    func keyPassesDefaultValidation(_  key: Key) -> Bool { return true }
+   func validationErrorMessageForKey(_  key: Key) -> String? {
+      return keyPassesDefaultValidation(key) ? nil : "Invalid value."
+   }
    var consistencyErrorKeyGroups: [[Key]] { return [] }
+   var consistencyErrorMessages: [(keys: [Key], message: String)] { return consistencyErrorKeyGroups.map { return ($0, "Conflicting values") } }
    var validatingKeys: [Key] { return [] }
    var validationContext: String { return "\(type(of: self))" }
    var errorsForKeys: [String : ConductionValidationError] {
@@ -89,7 +95,12 @@ public extension KVConductionValidating {
    var validationError: ConductionValidationError? {
       let subErrors = errorsForKeys
       var errors: [String : String] = [:]
-      let invalidKeys = Key.all.filter { return !self.keyPassesDefaultValidation($0) }
+      var invalidKeys: [Key] = []
+      Key.all.forEach {
+         guard let errorMessage = validationErrorMessageForKey($0) else { return }
+         invalidKeys.append($0)
+         errors[$0.rawValue] = errorMessage
+      }
       let hasValueSubErrors = !subErrors.filter {
          switch $1 {
          case .values: return true
@@ -99,18 +110,19 @@ public extension KVConductionValidating {
       
       guard invalidKeys.isEmpty, !hasValueSubErrors else {
          let keys = invalidKeys.map { return $0.rawValue }
-         keys.forEach { errors[$0] = "Invalid value." }
          var validationError: ConductionValidationError = .values(selfType: "\(type(of: self))", keys: keys, message: "\(validationContext) contains invalid values.", errors: errors)
          validationError.consolidate(with: subErrors)
          return validationError
       }
       
-      let keys = consistencyErrorKeyGroups.map { $0.map { return $0.rawValue } }
-      guard keys.isEmpty, subErrors.isEmpty else {
-         keys.forEach {
-            errors[$0.joined(separator: ",")] = "Conflicting values"
-         }
-         var validationError: ConductionValidationError = .consistency(selfType: "\(type(of: self))", keys: keys, message: "\(validationContext) contains conflicting values.", errors: errors)
+      var inconsistentKeyStringGroups: [[String]] = []
+      consistencyErrorMessages.forEach {
+         let keyStrings = $0.keys.map { return $0.rawValue }
+         inconsistentKeyStringGroups.append(keyStrings)
+         errors[keyStrings.joined(separator: ",")] = $0.message
+      }
+      guard inconsistentKeyStringGroups.isEmpty, subErrors.isEmpty else {
+         var validationError: ConductionValidationError = .consistency(selfType: "\(type(of: self))", keys: inconsistentKeyStringGroups, message: "\(validationContext) contains conflicting values.", errors: errors)
          validationError.consolidate(with: subErrors)
          return validationError
       }
