@@ -18,20 +18,21 @@ public extension ConductionHumanReadable where Self: RawRepresentable, Self.RawV
 }
 
 public enum ConductionValidationError: Error {
-   case values(selfType: String, keys: [String], message: String, errors: [String : String])
-   case consistency(selfType: String, keys: [[String]], message: String, errors: [String : String])
+   case values(selfType: String, message: String, errors: [(key: String, message: String)])
+   case consistency(selfType: String, message: String, errors: [(keys: [String], message: String)])
    
    // MARK: - Public Properties
    public var message: String {
       switch self {
-      case .values(_, _, let message, _): return message
-      case .consistency(_, _, let message, _): return message
+      case .values(_, let message, _): return message
+      case .consistency(_, let message, _): return message
       }
    }
-   public var errors: [String : String] {
+   
+   public var errors: [(keys: [String], message: String)] {
       switch self {
-      case .values(_, _, _, let errors): return errors
-      case .consistency(_, _, _, let errors): return errors
+      case .values(_, _, let errors): return errors.map { return (keys: [$0.key], message: $0.message) }
+      case .consistency(_, _, let errors): return errors
       }
    }
    
@@ -40,30 +41,24 @@ public enum ConductionValidationError: Error {
       guard !errorsForKeys.isEmpty else { return }
       
       switch self {
-      case .values(let selfType, var keys, let message, var errors):
+      case .values(let selfType, let message, var errors):
          errorsForKeys.forEach { key, error in
             switch error {
-            case .values(_, let subKeys, _, let subErrors):
-               keys.append(contentsOf: subKeys.map { return "\(key).\($0)" })
-               subErrors.forEach {
-                  errors["\(key).\($0)"] = $1
-               }
+            case .values(_, _, let subErrors):
+               errors.append(contentsOf: subErrors.map { return (key: "\(key).\($0.key)", message: $0.message) })
             case .consistency: return
             }
          }
-         self = .values(selfType: selfType, keys: keys, message: message, errors: errors)
-      case .consistency(let selfType, var keys, let message, var errors):
+         self = .values(selfType: selfType, message: message, errors: errors)
+      case .consistency(let selfType, let message, var errors):
          errorsForKeys.forEach { key, error in
             switch error {
             case .values: return
-            case .consistency(_, let subKeys, _, let subErrors):
-               keys.append(contentsOf: subKeys.map { $0.map { return "\(key).\($0)" } })
-               subErrors.forEach {
-                  errors["\(key).(\($0))"] = $1
-               }
+            case .consistency(_, _, let subErrors):
+               errors.append(contentsOf: subErrors.map { return (keys: $0.keys.map { "\(key).\($0)" }, message: $0.message) })
             }
          }
-         self = .consistency(selfType: selfType, keys: keys, message: message, errors: errors)
+         self = .consistency(selfType: selfType, message: message, errors: errors)
       }
    }
 }
@@ -107,12 +102,10 @@ public extension KVConductionValidating {
    
    var validationError: ConductionValidationError? {
       let subErrors = errorsForKeys
-      var errors: [String : String] = [:]
-      var invalidKeys: [Key] = []
+      var invalidErrors: [(key: String, message: String)] = []
       Key.all.forEach {
          guard let errorMessage = validationErrorMessageForKey($0) else { return }
-         invalidKeys.append($0)
-         errors[$0.rawValue] = errorMessage
+         invalidErrors.append((key: $0.rawValue, message: errorMessage))
       }
       let hasValueSubErrors = !subErrors.filter {
          switch $1 {
@@ -121,21 +114,19 @@ public extension KVConductionValidating {
          }
          }.isEmpty
       
-      guard invalidKeys.isEmpty, !hasValueSubErrors else {
-         let keyStrings = invalidKeys.map { $0.rawValue }
-         var validationError: ConductionValidationError = .values(selfType: "\(type(of: self))", keys: keyStrings, message: validationContext, errors: errors)
+      guard invalidErrors.isEmpty, !hasValueSubErrors else {
+         var validationError: ConductionValidationError = .values(selfType: "\(type(of: self))", message: validationContext, errors: invalidErrors)
          validationError.consolidate(with: subErrors)
          return validationError
       }
       
-      var inconsistentKeyStringGroups: [[String]] = []
+      var consistencyErrors: [(keys: [String], message: String)] = []
       consistencyErrorMessages.forEach {
          let keyStrings = $0.keys.map { return $0.rawValue }
-         inconsistentKeyStringGroups.append(keyStrings)
-         errors[keyStrings.joined(separator: ",")] = $0.message
+         consistencyErrors.append((keys: keyStrings, message: $0.message))
       }
-      guard inconsistentKeyStringGroups.isEmpty, subErrors.isEmpty else {
-         var validationError: ConductionValidationError = .consistency(selfType: "\(type(of: self))", keys: inconsistentKeyStringGroups, message: validationContext, errors: errors)
+      guard consistencyErrors.isEmpty, subErrors.isEmpty else {
+         var validationError: ConductionValidationError = .consistency(selfType: "\(type(of: self))", message: validationContext, errors: consistencyErrors)
          validationError.consolidate(with: subErrors)
          return validationError
       }
