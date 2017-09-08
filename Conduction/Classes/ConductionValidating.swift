@@ -9,6 +9,14 @@
 import Foundation
 import Bindable
 
+public protocol ConductionHumanReadable {
+   var humanReadableString: String { get }
+}
+
+public extension ConductionHumanReadable where Self: RawRepresentable, Self.RawValue == String {
+   var humanReadableString: String { return rawValue }
+}
+
 public enum ConductionValidationError: Error {
    case values(selfType: String, keys: [String], message: String, errors: [String : String])
    case consistency(selfType: String, keys: [[String]], message: String, errors: [String : String])
@@ -77,12 +85,17 @@ public protocol KVConductionValidating: ConductionValidating, IncKVCompliance {
 public extension KVConductionValidating {
    func keyPassesDefaultValidation(_  key: Key) -> Bool { return true }
    func validationErrorMessageForKey(_  key: Key) -> String? {
-      return keyPassesDefaultValidation(key) ? nil : "Invalid value."
+      guard !keyPassesDefaultValidation(key) else { return nil }
+      let keyName = (key as? ConductionHumanReadable)?.humanReadableString ?? key.rawValue
+      return keyName.isEmpty ? "Invalid value." : "\(keyName): Invalid value."
    }
    var consistencyErrorKeyGroups: [[Key]] { return [] }
-   var consistencyErrorMessages: [(keys: [Key], message: String)] { return consistencyErrorKeyGroups.map { return ($0, "Conflicting values") } }
+   var consistencyErrorMessages: [(keys: [Key], message: String)] { return consistencyErrorKeyGroups.map {
+      let messageKey = $0.map { ($0 as? ConductionHumanReadable)?.humanReadableString ?? $0.rawValue }.joined(separator: ", ")
+      return (keys: $0, message: messageKey.isEmpty ? "Conflicting values." : "\(messageKey): Conflicting values.") }
+   }
    var validatingKeys: [Key] { return [] }
-   var validationContext: String { return "\(type(of: self))" }
+   var validationContext: String { return (self as? ConductionHumanReadable)?.humanReadableString ?? "\(type(of: self))" }
    var errorsForKeys: [String : ConductionValidationError] {
       var errorsForKeys: [String : ConductionValidationError] = [:]
       validatingKeys.forEach {
@@ -109,8 +122,8 @@ public extension KVConductionValidating {
          }.isEmpty
       
       guard invalidKeys.isEmpty, !hasValueSubErrors else {
-         let keys = invalidKeys.map { return $0.rawValue }
-         var validationError: ConductionValidationError = .values(selfType: "\(type(of: self))", keys: keys, message: "\(validationContext) contains invalid values.", errors: errors)
+         let keyStrings = invalidKeys.map { $0.rawValue }
+         var validationError: ConductionValidationError = .values(selfType: "\(type(of: self))", keys: keyStrings, message: validationContext, errors: errors)
          validationError.consolidate(with: subErrors)
          return validationError
       }
@@ -122,7 +135,7 @@ public extension KVConductionValidating {
          errors[keyStrings.joined(separator: ",")] = $0.message
       }
       guard inconsistentKeyStringGroups.isEmpty, subErrors.isEmpty else {
-         var validationError: ConductionValidationError = .consistency(selfType: "\(type(of: self))", keys: inconsistentKeyStringGroups, message: "\(validationContext) contains conflicting values.", errors: errors)
+         var validationError: ConductionValidationError = .consistency(selfType: "\(type(of: self))", keys: inconsistentKeyStringGroups, message: validationContext, errors: errors)
          validationError.consolidate(with: subErrors)
          return validationError
       }
