@@ -37,7 +37,7 @@ public enum ConductionValidationError: Error {
    }
    
    // MARK: - Consolidating Errors
-   public mutating func consolidate(with errorsForKeys: [String : ConductionValidationError]) {
+   public mutating func consolidate(with errorsForKeys: [(key: String, error: ConductionValidationError)]) {
       guard !errorsForKeys.isEmpty else { return }
       
       switch self {
@@ -74,7 +74,7 @@ public protocol KVConductionValidating: ConductionValidating, IncKVCompliance {
    var consistencyErrorMessages: [(keys: [Key], message: String)] { get }
    var validatingKeys: [Key] { get }
    var validationContext: String { get }
-   var errorsForKeys: [String : ConductionValidationError] { get }
+   var errorsForKeys: [(key: String, error: ConductionValidationError)] { get }
 }
 
 public extension KVConductionValidating {
@@ -91,11 +91,11 @@ public extension KVConductionValidating {
    }
    var validatingKeys: [Key] { return [] }
    var validationContext: String { return (self as? ConductionHumanReadable)?.humanReadableString ?? "\(type(of: self))" }
-   var errorsForKeys: [String : ConductionValidationError] {
-      var errorsForKeys: [String : ConductionValidationError] = [:]
-      validatingKeys.forEach {
-         guard let value = self[$0] as? ConductionValidating, let error = value.validationError else { return }
-         errorsForKeys[$0.rawValue] = error
+   var errorsForKeys: [(key: String, error: ConductionValidationError)] {
+      var errorsForKeys: [(key: String, error: ConductionValidationError)] = []
+      return validatingKeys.flatMap {
+         guard let value = self[$0] as? ConductionValidating, let error = value.validationError else { return nil }
+         return (key: $0.rawValue, error: error)
       }
       return errorsForKeys
    }
