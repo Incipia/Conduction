@@ -52,6 +52,12 @@ open class ConductionResource<Resource> {
       }
    }
    
+   func forgetAll() {
+      dispatchQueue.async {
+         self._forgetAll()
+      }
+   }
+
    func expire() {
       dispatchQueue.async {
          self._expire()
@@ -95,6 +101,13 @@ open class ConductionResource<Resource> {
       let oldPriority = _priority()
       _waitingBlocks = _waitingBlocks.filter { $0.id != observer }
       _history = _history.filter { $0 != observer }
+      _updatePriority(oldPriority: oldPriority)
+   }
+   
+   private func _forgetAll() {
+      let oldPriority = _priority()
+      _waitingBlocks = []
+      _history = []
       _updatePriority(oldPriority: oldPriority)
    }
    
