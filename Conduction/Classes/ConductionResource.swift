@@ -9,7 +9,7 @@ import Foundation
 
 public enum ConductionResourceState<Resource> {
    case empty
-   case fetching(ConductionResourceFetchID)
+   case fetching(id: ConductionResourceFetchID, priority: Int?)
    case fetched(Resource?)
 }
 
@@ -27,7 +27,7 @@ open class ConductionResource<Resource> {
    public let dispatchQueue: DispatchQueue
    public let defaultPriority: Int
    private var isFetched: Bool = false
-   public var fetchBlock: (_ completion: (_ resource: Resource?) -> Void) -> Void = { completion in completion(nil) }
+   public var fetchBlock: (_ priority: Int?, _ completion: (_ resource: Resource?) -> Void) -> Void = { _, completion in completion(nil) }
    public var invalidateBlock: () -> Resource? = { return nil }
    public var priorityChangeBlock: ((_ oldPriority: Int?, _ newPriority: Int?) -> Void)?
    
@@ -57,6 +57,12 @@ open class ConductionResource<Resource> {
          self._forgetAll()
       }
    }
+   
+   func check(completion: @escaping (_ state: ConductionResourceState<Resource>) -> Void) {
+      dispatchQueue.async {
+         self._check(completion: completion)
+      }
+   }
 
    func expire() {
       dispatchQueue.async {
@@ -82,19 +88,24 @@ open class ConductionResource<Resource> {
       switch state {
       case .fetched(let resource): completion(resource)
       case .empty:
-         _addObserver(observer: observer, priority: priority, completion: completion)
+         let oldPriority = _priority()
+         guard _addObserver(observer: observer, priority: priority, completion: completion) else { return }
          _fetch()
-      case .fetching: _addObserver(observer: observer, priority: priority, completion: completion)
+         _updatePriority(oldPriority: oldPriority)
+      case .fetching:
+         let oldPriority = _priority()
+         guard _addObserver(observer: observer, priority: priority, completion: completion) else { return }
+         _updatePriority(oldPriority: oldPriority)
       }
    }
    
-   private func _addObserver(observer: ConductionResourceObserver, priority: Int, completion: @escaping (_ resource: Resource?) -> Void) {
-      guard !_history.contains(observer) else { return }
+   private func _addObserver(observer: ConductionResourceObserver, priority: Int, completion: @escaping (_ resource: Resource?) -> Void) -> Bool {
+      guard !_history.contains(observer) else { return false }
 
-      let oldPriority = _priority()
       _waitingBlocks = _waitingBlocks.filter { $0.id != observer }
       _waitingBlocks.append((id: observer, priority: priority, block: completion))
-      _updatePriority(oldPriority: oldPriority)
+      
+      return true
    }
    
    private func _forget(_ observer: ConductionResourceObserver) {
@@ -111,6 +122,10 @@ open class ConductionResource<Resource> {
       _updatePriority(oldPriority: oldPriority)
    }
    
+   private func _check(completion: @escaping (_ state: ConductionResourceState<Resource>) -> Void) {
+      completion(state)
+   }
+   
    private func _priority() -> Int? {
       return _waitingBlocks.reduce(nil) { result, tuple in
          guard let result = result else { return tuple.priority }
@@ -121,6 +136,10 @@ open class ConductionResource<Resource> {
    private func _updatePriority(oldPriority: Int?) {
       let newPriority = _priority()
       guard oldPriority != newPriority else { return }
+      switch state {
+      case .fetching(let id, _): state = .fetching(id: id, priority: newPriority)
+      default: break
+      }
       priorityChangeBlock?(oldPriority, newPriority)
    }
    
@@ -149,11 +168,10 @@ open class ConductionResource<Resource> {
    
    private func _fetch() {
       let id = ConductionResourceFetchID()
-      state = .fetching(id)
-      fetchBlock { resource in
+      fetchBlock(_priority()) { resource in
          dispatchQueue.async {
             switch self.state {
-            case .fetching(let fetchingID):
+            case .fetching(let fetchingID, _):
                guard fetchingID == id else { return }
                self._setResource(resource)
             default: break
