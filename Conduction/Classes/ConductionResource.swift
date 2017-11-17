@@ -20,6 +20,7 @@ public typealias ConductionResourceFetchID = UUID
 open class ConductionResource<Resource> {
    // MARK: - Private Properties
    private var _waitingBlocks: [(id: ConductionResourceObserver, priority: Int, block: (_ resource: Resource?) -> Void)] = []
+   private var _history: [ConductionResourceObserver] = []
    
    // MARK: - Public Properties
    public private(set) var state: ConductionResourceState<Resource> = .empty
@@ -37,8 +38,8 @@ open class ConductionResource<Resource> {
    }
    
    // MARK: - Public
-   func get(priority: Int? = nil, completion: @escaping (_ resource: Resource?) -> Void) -> ConductionResourceObserver {
-      let observer = ConductionResourceObserver()
+   func get(observer: ConductionResourceObserver? = nil, priority: Int? = nil, completion: @escaping (_ resource: Resource?) -> Void) -> ConductionResourceObserver {
+      let observer = observer ?? ConductionResourceObserver()
       dispatchQueue.async {
          self._get(observer: observer, priority: priority, completion: completion)
       }
@@ -82,7 +83,10 @@ open class ConductionResource<Resource> {
    }
    
    private func _addObserver(observer: ConductionResourceObserver, priority: Int, completion: @escaping (_ resource: Resource?) -> Void) {
+      guard !_history.contains(observer) else { return }
+
       let oldPriority = _priority()
+      _waitingBlocks = _waitingBlocks.filter { $0.id != observer }
       _waitingBlocks.append((id: observer, priority: priority, block: completion))
       _updatePriority(oldPriority: oldPriority)
    }
@@ -90,6 +94,7 @@ open class ConductionResource<Resource> {
    private func _forget(_ observer: ConductionResourceObserver) {
       let oldPriority = _priority()
       _waitingBlocks = _waitingBlocks.filter { $0.id != observer }
+      _history = _history.filter { $0 != observer }
       _updatePriority(oldPriority: oldPriority)
    }
    
@@ -148,6 +153,7 @@ open class ConductionResource<Resource> {
       let oldPriority = _priority()
       let waitingBlocks = _waitingBlocks.sorted { return $0.priority > $1.priority }
       _waitingBlocks = []
+      _history.append(contentsOf: waitingBlocks.map { return $0.id })
       _updatePriority(oldPriority: oldPriority)
       waitingBlocks.forEach { $0.block(resource) }
    }
