@@ -9,11 +9,13 @@ import Foundation
 
 public enum ConductionResourceState<Resource> {
    case empty
-   case fetching(ConductionResourceObserver)
+   case fetching(ConductionResourceFetchID)
    case fetched(Resource?)
 }
 
 public typealias ConductionResourceObserver = UUID
+
+public typealias ConductionResourceFetchID = UUID
 
 open class ConductionResource<Resource> {
    // MARK: - Private Properties
@@ -128,14 +130,16 @@ open class ConductionResource<Resource> {
    }
    
    private func _fetch() {
-      let id = UUID()
+      let id = ConductionResourceFetchID()
       state = .fetching(id)
       fetchBlock { resource in
-         switch self.state {
-         case .fetching(let fetchingID):
-            guard fetchingID == id else { return }
-            _setResource(resource)
-         default: break
+         dispatchQueue.async {
+            switch self.state {
+            case .fetching(let fetchingID):
+               guard fetchingID == id else { return }
+               self._setResource(resource)
+            default: break
+            }
          }
       }
    }
