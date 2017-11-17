@@ -7,11 +7,55 @@
 
 import Foundation
 
-public enum ConductionResourceState<Resource> {
+public enum ConductionResourceState<Resource>: Equatable {
    case empty
    case fetching(id: ConductionResourceFetchID, priority: Int?)
    case fetched(Resource?)
+   
+   // MARK: - Equatable
+   public static func ==(lhs: ConductionResourceState<Resource>, rhs: ConductionResourceState<Resource>) -> Bool {
+      switch lhs {
+      case .empty:
+         switch rhs {
+         case .empty: return true
+         default: return false
+         }
+      case .fetching(let id, let priority):
+         switch rhs {
+         case .fetching(let rID, let rPriority): return id == rID && priority == rPriority
+         default: return false
+         }
+      case .fetched(let resource):
+         switch rhs {
+         case .fetched(let rResource): return resource == nil && rResource == nil
+         default: return false
+         }
+      }
+   }
 }
+
+//public extension ConductionResourceState where Resource: Equatable {
+//   // MARK: - Equatable
+//   public static func ==(lhs: ConductionResourceState<Resource>, rhs: ConductionResourceState<Resource>) -> Bool {
+//      switch lhs {
+//      case .empty:
+//         switch rhs {
+//         case .empty: return true
+//         default: return false
+//         }
+//      case .fetching(let id, let priority):
+//         switch rhs {
+//         case .fetching(let rID, let rPriority): return id == rID && priority == rPriority
+//         default: return false
+//         }
+//      case .fetched(let resource):
+//         switch rhs {
+//         case .fetched(let rResource): return resource == rResource
+//         default: return false
+//         }
+//      }
+//   }
+//}
 
 public typealias ConductionResourceObserver = UUID
 
@@ -23,22 +67,29 @@ open class ConductionResource<Resource> {
    private var _history: [ConductionResourceObserver] = []
    
    // MARK: - Public Properties
-   public private(set) var state: ConductionResourceState<Resource> = .empty
+   public private(set) var state: ConductionResourceState<Resource> = .empty {
+      didSet {
+         guard let stateChangeBlock = stateChangeBlock, oldValue != state else { return }
+         stateChangeBlock(oldValue, state)
+      }
+   }
    public let dispatchQueue: DispatchQueue
    public let defaultPriority: Int
-   private var isFetched: Bool = false
-   public var fetchBlock: (_ priority: Int?, _ completion: (_ resource: Resource?) -> Void) -> Void = { _, completion in completion(nil) }
-   public var invalidateBlock: () -> Resource? = { return nil }
-   public var priorityChangeBlock: ((_ oldPriority: Int?, _ newPriority: Int?) -> Void)?
+   public let fetchBlock: (_ priority: Int?, _ completion: @escaping (_ resource: Resource?) -> Void) -> Void
+   public var invalidateBlock: () -> Resource?
+   public var stateChangeBlock: ((_ oldState: ConductionResourceState<Resource>, _ newState: ConductionResourceState<Resource>) -> Void)?
    
    // MARK: - Init
-   init(dispatchQueue: DispatchQueue = .main, defaultPriority: Int = 0) {
+   public init(dispatchQueue: DispatchQueue = .main, defaultPriority: Int = 0, stateChangeBlock: ((_ oldState: ConductionResourceState<Resource>, _ newState: ConductionResourceState<Resource>) -> Void)? = nil, invalidateBlock: @escaping () -> Resource? = { return nil }, fetchBlock: @escaping (_ priority: Int?, _ completion: @escaping (_ resource: Resource?) -> Void) -> Void) {
       self.dispatchQueue = dispatchQueue
       self.defaultPriority = defaultPriority
+      self.stateChangeBlock = stateChangeBlock
+      self.invalidateBlock = invalidateBlock
+      self.fetchBlock = fetchBlock
    }
    
    // MARK: - Public
-   func get(observer: ConductionResourceObserver? = nil, priority: Int? = nil, completion: @escaping (_ resource: Resource?) -> Void) -> ConductionResourceObserver {
+   @discardableResult public func get(observer: ConductionResourceObserver? = nil, priority: Int? = nil, completion: @escaping (_ resource: Resource?) -> Void) -> ConductionResourceObserver {
       let observer = observer ?? ConductionResourceObserver()
       dispatchQueue.async {
          self._get(observer: observer, priority: priority, completion: completion)
@@ -46,37 +97,37 @@ open class ConductionResource<Resource> {
       return observer
    }
    
-   func forget(_ observer: ConductionResourceObserver) {
+   public func forget(_ observer: ConductionResourceObserver) {
       dispatchQueue.async {
          self._forget(observer)
       }
    }
    
-   func forgetAll() {
+   public func forgetAll() {
       dispatchQueue.async {
          self._forgetAll()
       }
    }
    
-   func check(completion: @escaping (_ state: ConductionResourceState<Resource>) -> Void) {
+   public func check(completion: @escaping (_ state: ConductionResourceState<Resource>) -> Void) {
       dispatchQueue.async {
          self._check(completion: completion)
       }
    }
 
-   func expire() {
+   public func expire() {
       dispatchQueue.async {
          self._expire()
       }
    }
    
-   func invalidate() {
+   public func invalidate() {
       dispatchQueue.async {
          self._invalidate()
       }
    }
    
-   func setResource(_ resource: Resource?) {
+   public func setResource(_ resource: Resource?) {
       dispatchQueue.async {
          self._setResource(resource)
       }
@@ -137,10 +188,12 @@ open class ConductionResource<Resource> {
       let newPriority = _priority()
       guard oldPriority != newPriority else { return }
       switch state {
-      case .fetching(let id, _): state = .fetching(id: id, priority: newPriority)
+      case .fetching(let id, let priority):
+         if priority != newPriority {
+            state = .fetching(id: id, priority: newPriority)
+         }
       default: break
       }
-      priorityChangeBlock?(oldPriority, newPriority)
    }
    
    private func _expire() {
@@ -155,21 +208,22 @@ open class ConductionResource<Resource> {
       switch state {
       case .empty: return
       case .fetching:
-         state = .empty
          _callWaitingBlocks(resource: invalidateBlock())
+         state = .empty
       case .fetched: state = .empty
       }
    }
    
    private func _setResource(_ resource: Resource?) {
-      state = .fetched(resource)
       _callWaitingBlocks(resource: resource)
+      state = .fetched(resource)
    }
    
    private func _fetch() {
       let id = ConductionResourceFetchID()
-      fetchBlock(_priority()) { resource in
-         dispatchQueue.async {
+      let priority = _priority()
+      fetchBlock(priority) { resource in
+         self.dispatchQueue.async {
             switch self.state {
             case .fetching(let fetchingID, _):
                guard fetchingID == id else { return }
@@ -178,6 +232,7 @@ open class ConductionResource<Resource> {
             }
          }
       }
+      self.state = .fetching(id: id, priority: priority)
    }
    
    private func _callWaitingBlocks(resource: Resource?) {
