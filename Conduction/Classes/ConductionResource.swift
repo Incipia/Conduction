@@ -47,6 +47,8 @@ open class ConductionBaseResource<Input, Resource> {
    public let fetchBlock: ConductionResourceFetchBlock<Input, Resource>?
    public let transformBlock: ConductionResourceTransformBlock<Input, Resource>?
    public let commitBlock: ConductionResourceCommitBlock<Input, Resource>
+   public private(set) var input: Input?
+   public private(set) var resource: Resource?
    
    // MARK: - Init
    public init(dispatchQueue: DispatchQueue = .main, defaultPriority: Int = 0, fetchBlock: ConductionResourceFetchBlock<Input, Resource>? = nil, transformBlock: ConductionResourceTransformBlock<Input, Resource>? = nil, commitBlock: @escaping ConductionResourceCommitBlock<Input, Resource> = { _, nextState, _ in return nextState }) {
@@ -94,7 +96,7 @@ open class ConductionBaseResource<Input, Resource> {
       }
    }
    
-   public func check(completion: @escaping (_ state: ConductionResourceState<Input, Resource>) -> Void) {
+   public func check(completion: @escaping (_ state: ConductionResourceState<Input, Resource>, _ input: Input?, _ resource: Resource?) -> Void) {
       dispatchQueue.async {
          self._check(completion: completion)
       }
@@ -131,7 +133,8 @@ open class ConductionBaseResource<Input, Resource> {
       state = nextState
       switch state {
       case .invalid(let resource):
-         _callWaitingBlocks(resource: resource)
+         self.resource = resource
+         _callWaitingBlocks()
          forgetAll()
       case .empty: break
       case .fetching(let id, _):
@@ -141,24 +144,31 @@ open class ConductionBaseResource<Input, Resource> {
          }
          _fetch(id: id)
       case .processing(let id, _, let input):
+         self.input = input
          switch oldState {
          case .processing(let oldID, _, _): guard id != oldID else { return }
          default: break
          }
          _process(id: id, input: input)
-      case .fetched(let resource): _callWaitingBlocks(resource: resource)
+      case .fetched(let resource):
+         self.resource = resource
+         _callWaitingBlocks()
       }
    }
    
-   private func _get(observer: ConductionResourceObserver?, priority: Int?, completion: @escaping (_ resource: Resource?) -> Void) {
+   @discardableResult private func _get(observer: ConductionResourceObserver? = nil, priority: Int? = nil, callNow: Bool = false, completion: @escaping (_ resource: Resource?) -> Void) -> ConductionResourceObserver {
       let observer = observer ?? ConductionResourceObserver()
-      guard !_getHistory.contains(observer) else { return }
+      guard !_getHistory.contains(observer) else { return observer }
+      guard !callNow else {
+         completion(resource)
+         return observer
+      }
       
       switch state {
-      case .invalid: return
-      case .fetched(let resource):
+      case .invalid: return observer
+      case .fetched:
          completion(resource)
-         return
+         return observer
       default:
          let oldPriority = _priority()
          _getBlocks = _getBlocks.filter { $0.id != observer }
@@ -169,30 +179,49 @@ open class ConductionBaseResource<Input, Resource> {
          default: break
          }
       }
+      
+      return observer
    }
    
-   private func _observe(observer: ConductionResourceObserver?, priority: Int?, completion: @escaping (_ resource: Resource?) -> Void) {
+   @discardableResult private func _observe(observer: ConductionResourceObserver? = nil, priority: Int? = nil, callNow: Bool = false, completion: @escaping (_ resource: Resource?) -> Void) -> ConductionResourceObserver {
+      let observer = observer ?? ConductionResourceObserver()
+
       switch state {
-      case .invalid: return
+      case .invalid: return observer
       default:
          let oldPriority = _priority()
-         let observer = observer ?? ConductionResourceObserver()
          _observerBlocks = _observerBlocks.filter { $0.id != observer }
          _observerBlocks.append((id: observer, priority: priority ?? defaultPriority, block: completion))
          _updatePriority(oldPriority: oldPriority)
+         if callNow {
+            completion(resource)
+         } else {
+            switch state {
+            case .fetched: completion(resource)
+            default: break
+            }
+         }
       }
+      
+      return observer
    }
 
-   private func _observeState(observer: ConductionResourceObserver?, priority: Int?, completion: @escaping (_ oldState: ConductionResourceState<Input, Resource>, _ newState: ConductionResourceState<Input, Resource>) -> Void) {
+   @discardableResult private func _observeState(observer: ConductionResourceObserver? = nil, priority: Int? = nil, callNow: Bool = false, completion: @escaping (_ oldState: ConductionResourceState<Input, Resource>, _ newState: ConductionResourceState<Input, Resource>) -> Void) -> ConductionResourceObserver {
+      let observer = observer ?? ConductionResourceObserver()
+
       switch state {
-      case .invalid: return
+      case .invalid: return observer
       default:
          let oldPriority = _priority()
-         let observer = observer ?? ConductionResourceObserver()
          _stateObserverBlocks = _stateObserverBlocks.filter { $0.id != observer }
          _stateObserverBlocks.append((id: observer, priority: priority ?? defaultPriority, block: completion))
          _updatePriority(oldPriority: oldPriority)
+         if callNow {
+            completion(state, state)
+         }
       }
+      
+      return observer
    }
 
    private func _forget(_ observer: ConductionResourceObserver) {
@@ -213,8 +242,8 @@ open class ConductionBaseResource<Input, Resource> {
       _updatePriority(oldPriority: oldPriority)
    }
    
-   private func _check(completion: (_ state: ConductionResourceState<Input, Resource>) -> Void) {
-      completion(state)
+   private func _check(completion: (_ state: ConductionResourceState<Input, Resource>, _ input: Input?, _ resource: Resource?) -> Void) {
+      completion(state, input, resource)
    }
    
    private func _priority() -> Int? {
@@ -308,7 +337,7 @@ open class ConductionBaseResource<Input, Resource> {
       }
    }
 
-   private func _callWaitingBlocks(resource: Resource?) {
+   private func _callWaitingBlocks() {
       var waitingBlocks: [ConductionResourceObserverEntry<Resource>] = _getBlocks
       waitingBlocks.append(contentsOf: _observerBlocks)
       waitingBlocks.sort { $0.priority > $1.priority }
