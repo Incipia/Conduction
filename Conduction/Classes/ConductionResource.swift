@@ -9,15 +9,15 @@ import Foundation
 
 public enum ConductionResourceState<Input, Resource> {
    case empty
-   case fetching(id: ConductionResourceFetchID, priority: Int?)
-   case processing(id: ConductionResourceFetchID, priority: Int?, input: Input?)
+   case fetching(id: ConductionResourceTaskID, priority: Int?)
+   case processing(id: ConductionResourceTaskID, priority: Int?, input: Input?)
    case fetched(Resource?)
    case invalid(Resource?)
 }
 
 public typealias ConductionResourceObserver = UUID
 
-public typealias ConductionResourceFetchID = UUID
+public typealias ConductionResourceTaskID = UUID
 
 public typealias ConductionResourceFetchBlock<Input, Resource> = (_ state: ConductionResourceState<Input, Resource>, _ completion: @escaping (_ fetchedInput: Input?) -> Void) -> Void
 
@@ -186,7 +186,7 @@ open class ConductionBaseResource<Input, Resource> {
          _getBlocks = _getBlocks.filter { $0.id != observer }
          _getBlocks.append((id: observer, priority: priority ?? defaultPriority, block: completion))
          switch state {
-         case .empty: directTransition(newState: .fetching(id: ConductionResourceFetchID(), priority: _priority()))
+         case .empty: directTransition(newState: .fetching(id: ConductionResourceTaskID(), priority: _priority()))
          case .fetching, .processing: _updatePriority(oldPriority: oldPriority)
          default: break
          }
@@ -261,7 +261,7 @@ open class ConductionBaseResource<Input, Resource> {
    open func directLoad() {
       switch state {
       case .invalid: return
-      case .empty: directTransition(newState: .fetching(id: ConductionResourceFetchID(), priority: _priority()))
+      case .empty: directTransition(newState: .fetching(id: ConductionResourceTaskID(), priority: _priority()))
       default: break
       }
    }
@@ -269,7 +269,7 @@ open class ConductionBaseResource<Input, Resource> {
    open func directReload() {
       switch state {
       case .invalid: return
-      default:_fetch(id: ConductionResourceFetchID())
+      default:_fetch(id: ConductionResourceTaskID())
       }
    }
 
@@ -289,7 +289,7 @@ open class ConductionBaseResource<Input, Resource> {
    }
    
    open func directSetInput(_ input: Input?) {
-      directTransition(newState: .processing(id: ConductionResourceFetchID(), priority: _priority(), input: input))
+      directTransition(newState: .processing(id: ConductionResourceTaskID(), priority: _priority(), input: input))
    }
    
    open func directSetResource(_ resource: Resource?) {
@@ -328,9 +328,9 @@ open class ConductionBaseResource<Input, Resource> {
       }
    }
    
-   private func _fetch(id: ConductionResourceFetchID) {
+   private func _fetch(id: ConductionResourceTaskID) {
       guard let fetchBlock = fetchBlock else {
-         directTransition(newState: .processing(id: ConductionResourceFetchID(), priority: _priority(), input: nil))
+         directTransition(newState: .processing(id: ConductionResourceTaskID(), priority: _priority(), input: nil))
          return
       }
       
@@ -340,14 +340,14 @@ open class ConductionBaseResource<Input, Resource> {
             switch strongSelf.state {
             case .fetching(let newID, _):
                guard id == newID else { return }
-               strongSelf.directTransition(newState: .processing(id: ConductionResourceFetchID(), priority: strongSelf._priority(), input: input))
+               strongSelf.directTransition(newState: .processing(id: ConductionResourceTaskID(), priority: strongSelf._priority(), input: input))
             default: break
             }
          }
       }
    }
 
-   private func _process(id: ConductionResourceFetchID, input: Input?) {
+   private func _process(id: ConductionResourceTaskID, input: Input?) {
       guard let transformBlock = transformBlock else {
          directTransition(newState: .fetched(input as? Resource))
          return
