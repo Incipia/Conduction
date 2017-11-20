@@ -102,6 +102,18 @@ open class ConductionBaseResource<Input, Resource> {
       }
    }
    
+   public func load() {
+      dispatchQueue.async {
+         self.directLoad()
+      }
+   }
+
+   public func reload() {
+      dispatchQueue.async {
+         self.directReload()
+      }
+   }
+
    public func expire() {
       dispatchQueue.async {
          self.directExpire()
@@ -246,8 +258,24 @@ open class ConductionBaseResource<Input, Resource> {
       completion(state, _priority(), input, resource)
    }
    
+   open func directLoad() {
+      switch state {
+      case .invalid: return
+      case .empty: directTransition(newState: .fetching(id: ConductionResourceFetchID(), priority: _priority()))
+      default: break
+      }
+   }
+
+   open func directReload() {
+      switch state {
+      case .invalid: return
+      default:_fetch(id: ConductionResourceFetchID())
+      }
+   }
+
    open func directExpire() {
       switch state {
+      case .invalid: return
       case .empty: return
       default: directTransition(newState: .empty)
       }
