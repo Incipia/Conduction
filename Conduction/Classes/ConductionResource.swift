@@ -63,7 +63,7 @@ open class ConductionBaseResource<Input, Resource> {
    @discardableResult public func get(observer: ConductionResourceObserver? = nil, priority: Int? = nil, completion: @escaping (_ resource: Resource?) -> Void) -> ConductionResourceObserver {
       let observer = observer ?? ConductionResourceObserver()
       dispatchQueue.async {
-         self._get(observer: observer, priority: priority, completion: completion)
+         self.directGet(observer: observer, priority: priority, completion: completion)
       }
       return observer
    }
@@ -71,7 +71,7 @@ open class ConductionBaseResource<Input, Resource> {
    @discardableResult public func observe(observer: ConductionResourceObserver? = nil, priority: Int? = nil, completion: @escaping (_ resource: Resource?) -> Void) -> ConductionResourceObserver {
       let observer = observer ?? ConductionResourceObserver()
       dispatchQueue.async {
-         self._observe(observer: observer, priority: priority, completion: completion)
+         self.directObserve(observer: observer, priority: priority, completion: completion)
       }
       return observer
    }
@@ -79,55 +79,55 @@ open class ConductionBaseResource<Input, Resource> {
    @discardableResult public func observeState(observer: ConductionResourceObserver? = nil, priority: Int? = nil, completion: @escaping (_ oldState: ConductionResourceState<Input, Resource>, _ newState: ConductionResourceState<Input, Resource>) -> Void) -> ConductionResourceObserver {
       let observer = observer ?? ConductionResourceObserver()
       dispatchQueue.async {
-         self._observeState(observer: observer, priority: priority, completion: completion)
+         self.directObserveState(observer: observer, priority: priority, completion: completion)
       }
       return observer
    }
 
    public func forget(_ observer: ConductionResourceObserver) {
       dispatchQueue.async {
-         self._forget(observer)
+         self.directForget(observer)
       }
    }
    
    public func forgetAll() {
       dispatchQueue.async {
-         self._forgetAll()
+         self.directForgetAll()
       }
    }
    
-   public func check(completion: @escaping (_ state: ConductionResourceState<Input, Resource>, _ input: Input?, _ resource: Resource?) -> Void) {
+   public func check(completion: @escaping (_ state: ConductionResourceState<Input, Resource>, _ priority: Int?, _ input: Input?, _ resource: Resource?) -> Void) {
       dispatchQueue.async {
-         self._check(completion: completion)
+         self.directCheck(completion: completion)
       }
    }
-
+   
    public func expire() {
       dispatchQueue.async {
-         self._expire()
+         self.directExpire()
       }
    }
    
    public func invalidate() {
       dispatchQueue.async {
-         self._invalidate()
+         self.directInvalidate()
       }
    }
    
    public func setInput( _ input: Input?) {
       dispatchQueue.async {
-         self._setInput(input)
+         self.directSetInput(input)
       }
    }
    
    public func setResource(_ resource: Resource?) {
       dispatchQueue.async {
-         self._setResource(resource)
+         self.directSetResource(resource)
       }
    }
    
-   // MARK: - Private
-   private func _transition(newState: ConductionResourceState<Input, Resource>, input: Input? = nil) {
+   // MARK: - Direct
+   open func directTransition(newState: ConductionResourceState<Input, Resource>, input: Input? = nil) {
       let oldState = state
       guard let nextState = commitBlock(oldState, newState, input) else { return }
       state = nextState
@@ -156,7 +156,7 @@ open class ConductionBaseResource<Input, Resource> {
       }
    }
    
-   @discardableResult private func _get(observer: ConductionResourceObserver? = nil, priority: Int? = nil, callNow: Bool = false, completion: @escaping (_ resource: Resource?) -> Void) -> ConductionResourceObserver {
+   @discardableResult open func directGet(observer: ConductionResourceObserver? = nil, priority: Int? = nil, callNow: Bool = false, completion: @escaping (_ resource: Resource?) -> Void) -> ConductionResourceObserver {
       let observer = observer ?? ConductionResourceObserver()
       guard !_getHistory.contains(observer) else { return observer }
       guard !callNow else {
@@ -174,7 +174,7 @@ open class ConductionBaseResource<Input, Resource> {
          _getBlocks = _getBlocks.filter { $0.id != observer }
          _getBlocks.append((id: observer, priority: priority ?? defaultPriority, block: completion))
          switch state {
-         case .empty: _transition(newState: .fetching(id: ConductionResourceFetchID(), priority: _priority()))
+         case .empty: directTransition(newState: .fetching(id: ConductionResourceFetchID(), priority: _priority()))
          case .fetching, .processing: _updatePriority(oldPriority: oldPriority)
          default: break
          }
@@ -183,7 +183,7 @@ open class ConductionBaseResource<Input, Resource> {
       return observer
    }
    
-   @discardableResult private func _observe(observer: ConductionResourceObserver? = nil, priority: Int? = nil, callNow: Bool = false, completion: @escaping (_ resource: Resource?) -> Void) -> ConductionResourceObserver {
+   @discardableResult open func directObserve(observer: ConductionResourceObserver? = nil, priority: Int? = nil, callNow: Bool = false, completion: @escaping (_ resource: Resource?) -> Void) -> ConductionResourceObserver {
       let observer = observer ?? ConductionResourceObserver()
 
       switch state {
@@ -206,7 +206,7 @@ open class ConductionBaseResource<Input, Resource> {
       return observer
    }
 
-   @discardableResult private func _observeState(observer: ConductionResourceObserver? = nil, priority: Int? = nil, callNow: Bool = false, completion: @escaping (_ oldState: ConductionResourceState<Input, Resource>, _ newState: ConductionResourceState<Input, Resource>) -> Void) -> ConductionResourceObserver {
+   @discardableResult open func directObserveState(observer: ConductionResourceObserver? = nil, priority: Int? = nil, callNow: Bool = false, completion: @escaping (_ oldState: ConductionResourceState<Input, Resource>, _ newState: ConductionResourceState<Input, Resource>) -> Void) -> ConductionResourceObserver {
       let observer = observer ?? ConductionResourceObserver()
 
       switch state {
@@ -224,7 +224,7 @@ open class ConductionBaseResource<Input, Resource> {
       return observer
    }
 
-   private func _forget(_ observer: ConductionResourceObserver) {
+   open func directForget(_ observer: ConductionResourceObserver) {
       let oldPriority = _priority()
       _getBlocks = _getBlocks.filter { $0.id != observer }
       _observerBlocks = _observerBlocks.filter { $0.id != observer }
@@ -233,7 +233,7 @@ open class ConductionBaseResource<Input, Resource> {
       _updatePriority(oldPriority: oldPriority)
    }
    
-   private func _forgetAll() {
+   open func directForgetAll() {
       let oldPriority = _priority()
       _getBlocks = []
       _observerBlocks = []
@@ -242,10 +242,33 @@ open class ConductionBaseResource<Input, Resource> {
       _updatePriority(oldPriority: oldPriority)
    }
    
-   private func _check(completion: (_ state: ConductionResourceState<Input, Resource>, _ input: Input?, _ resource: Resource?) -> Void) {
-      completion(state, input, resource)
+   open func directCheck(completion: (_ state: ConductionResourceState<Input, Resource>, _ priority: Int?, _ input: Input?, _ resource: Resource?) -> Void) {
+      completion(state, _priority(), input, resource)
    }
    
+   open func directExpire() {
+      switch state {
+      case .empty: return
+      default: directTransition(newState: .empty)
+      }
+   }
+   
+   open func directInvalidate() {
+      switch state {
+      case .invalid: return
+      default: directTransition(newState: .invalid(nil))
+      }
+   }
+   
+   open func directSetInput(_ input: Input?) {
+      directTransition(newState: .processing(id: ConductionResourceFetchID(), priority: _priority(), input: input))
+   }
+   
+   open func directSetResource(_ resource: Resource?) {
+      directTransition(newState: .fetched(resource))
+   }
+
+   // MARK: - Private
    private func _priority() -> Int? {
       var priority: Int? = nil
       priority = _getBlocks.reduce(priority) { result, tuple in
@@ -269,39 +292,17 @@ open class ConductionBaseResource<Input, Resource> {
       switch state {
       case .fetching(let id, let priority):
          guard priority != newPriority else { return }
-         _transition(newState: .fetching(id: id, priority: newPriority))
+         directTransition(newState: .fetching(id: id, priority: newPriority))
       case .processing(let id, let priority, let input):
          guard priority != newPriority else { return }
-         _transition(newState: .processing(id: id, priority: newPriority, input: input))
+         directTransition(newState: .processing(id: id, priority: newPriority, input: input))
       default: break
       }
    }
    
-   private func _expire() {
-      switch state {
-      case .empty: return
-      default: _transition(newState: .empty)
-      }
-   }
-   
-   private func _invalidate() {
-      switch state {
-      case .invalid: return
-      default: _transition(newState: .invalid(nil))
-      }
-   }
-   
-   private func _setInput(_ input: Input?) {
-      _transition(newState: .processing(id: ConductionResourceFetchID(), priority: _priority(), input: input))
-   }
-
-   private func _setResource(_ resource: Resource?) {
-      _transition(newState: .fetched(resource))
-   }
-   
    private func _fetch(id: ConductionResourceFetchID) {
       guard let fetchBlock = fetchBlock else {
-         _transition(newState: .processing(id: ConductionResourceFetchID(), priority: _priority(), input: nil))
+         directTransition(newState: .processing(id: ConductionResourceFetchID(), priority: _priority(), input: nil))
          return
       }
       
@@ -311,7 +312,7 @@ open class ConductionBaseResource<Input, Resource> {
             switch strongSelf.state {
             case .fetching(let newID, _):
                guard id == newID else { return }
-               strongSelf._transition(newState: .processing(id: ConductionResourceFetchID(), priority: strongSelf._priority(), input: input))
+               strongSelf.directTransition(newState: .processing(id: ConductionResourceFetchID(), priority: strongSelf._priority(), input: input))
             default: break
             }
          }
@@ -320,7 +321,7 @@ open class ConductionBaseResource<Input, Resource> {
 
    private func _process(id: ConductionResourceFetchID, input: Input?) {
       guard let transformBlock = transformBlock else {
-         _transition(newState: .fetched(input as? Resource))
+         directTransition(newState: .fetched(input as? Resource))
          return
       }
       
@@ -330,7 +331,7 @@ open class ConductionBaseResource<Input, Resource> {
             switch strongSelf.state {
             case .processing(let newID, _, _):
                guard id == newID else { return }
-               strongSelf._transition(newState: .fetched(resource))
+               strongSelf.directTransition(newState: .fetched(resource))
             default: break
             }
          }
