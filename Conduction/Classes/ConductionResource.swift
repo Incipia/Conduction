@@ -23,7 +23,7 @@ public typealias ConductionResourceFetchBlock<Input, Resource> = (_ state: Condu
 
 public typealias ConductionResourceTransformBlock<Input, Resource> = (_ state: ConductionResourceState<Input, Resource>, _ completion: @escaping (_ resource: Resource?) -> Void) -> Void
 
-public typealias ConductionResourceCommitBlock<Input, Resource> = (_ state: ConductionResourceState<Input, Resource>, _ nextState: ConductionResourceState<Input, Resource>, _ input: Input?) -> ConductionResourceState<Input, Resource>?
+public typealias ConductionResourceCommitBlock<Input, Resource> = (_ state: ConductionResourceState<Input, Resource>, _ nextState: ConductionResourceState<Input, Resource>) -> ConductionResourceState<Input, Resource>?
 
 public typealias ConductionResourceObserverBlock<Resource> = (_ resource: Resource?) -> Void
 
@@ -51,7 +51,7 @@ open class ConductionBaseResource<Input, Resource> {
    public private(set) var resource: Resource?
    
    // MARK: - Init
-   public init(dispatchQueue: DispatchQueue = .main, defaultPriority: Int = 0, fetchBlock: ConductionResourceFetchBlock<Input, Resource>? = nil, transformBlock: ConductionResourceTransformBlock<Input, Resource>? = nil, commitBlock: @escaping ConductionResourceCommitBlock<Input, Resource> = { _, nextState, _ in return nextState }) {
+   public init(dispatchQueue: DispatchQueue = .main, defaultPriority: Int = 0, fetchBlock: ConductionResourceFetchBlock<Input, Resource>? = nil, transformBlock: ConductionResourceTransformBlock<Input, Resource>? = nil, commitBlock: @escaping ConductionResourceCommitBlock<Input, Resource> = { _, nextState in return nextState }) {
       self.dispatchQueue = dispatchQueue
       self.defaultPriority = defaultPriority
       self.fetchBlock = fetchBlock
@@ -139,9 +139,9 @@ open class ConductionBaseResource<Input, Resource> {
    }
    
    // MARK: - Direct
-   open func directTransition(newState: ConductionResourceState<Input, Resource>, input: Input? = nil) {
+   open func directTransition(newState: ConductionResourceState<Input, Resource>) {
       let oldState = state
-      guard let nextState = commitBlock(oldState, newState, input) else { return }
+      guard let nextState = commitBlock(oldState, newState) else { return }
       state = nextState
       switch state {
       case .invalid(let resource):
@@ -377,7 +377,7 @@ open class ConductionBaseResource<Input, Resource> {
 }
 
 public class ConductionResource<Resource>: ConductionBaseResource<Resource, Resource> {
-   public init(dispatchQueue: DispatchQueue = .main, defaultPriority: Int = 0, commitBlock: @escaping ConductionResourceCommitBlock<Resource, Resource> = { _, nextState, _ in return nextState }, fetchBlock: @escaping ConductionResourceFetchBlock<Resource, Resource>) {
+   public init(dispatchQueue: DispatchQueue = .main, defaultPriority: Int = 0, commitBlock: @escaping ConductionResourceCommitBlock<Resource, Resource> = { _, nextState in return nextState }, fetchBlock: @escaping ConductionResourceFetchBlock<Resource, Resource>) {
       super.init(dispatchQueue: dispatchQueue, defaultPriority: defaultPriority, fetchBlock: fetchBlock, commitBlock: commitBlock)
    }
 }
