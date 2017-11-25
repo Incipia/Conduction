@@ -114,6 +114,12 @@ open class ConductionBaseResource<Input, Resource> {
       }
    }
 
+   public func clear() {
+      dispatchQueue.async {
+         self.directClear()
+      }
+   }
+   
    public func expire() {
       dispatchQueue.async {
          self.directExpire()
@@ -271,6 +277,12 @@ open class ConductionBaseResource<Input, Resource> {
       case .invalid: return
       default:_fetch(id: ConductionResourceTaskID())
       }
+   }
+
+   open func directClear() {
+      input = nil
+      resource = nil
+      directExpire()
    }
 
    open func directExpire() {
