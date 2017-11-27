@@ -364,13 +364,12 @@ open class ConductionBaseResource<Input, Resource> {
          return
       }
       
-      fetchBlock(state) { [weak self] input in
-         self?.dispatch {
-            guard let strongSelf = self else { return }
-            switch strongSelf.state {
+      fetchBlock(state) { input in
+         self.dispatch {
+            switch self.state {
             case .fetching(let newID, _):
                guard id == newID else { return }
-               strongSelf.directTransition(newState: .processing(id: ConductionResourceTaskID(), priority: strongSelf._priority(), input: input))
+               self.directTransition(newState: .processing(id: ConductionResourceTaskID(), priority: self._priority(), input: input))
             default: break
             }
          }
@@ -383,13 +382,12 @@ open class ConductionBaseResource<Input, Resource> {
          return
       }
       
-      transformBlock(state) { [weak self] resource in
-         self?.dispatch {
-            guard let strongSelf = self else { return }
-            switch strongSelf.state {
+      transformBlock(state) { resource in
+         self.dispatch {
+            switch self.state {
             case .processing(let newID, _, _):
                guard id == newID else { return }
-               strongSelf.directTransition(newState: .fetched(resource))
+               self.directTransition(newState: .fetched(resource))
             default: break
             }
          }
