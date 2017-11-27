@@ -171,7 +171,7 @@ open class ConductionBaseResource<Input, Resource> {
    }
    
    public func dispatch(_ block: @escaping () -> Void) {
-      if dispatchQueue.getSpecific(key: _dispatchKey) != nil {
+      if DispatchQueue.getSpecific(key: _dispatchKey) != nil {
          block()
       } else {
          dispatchQueue.async {
