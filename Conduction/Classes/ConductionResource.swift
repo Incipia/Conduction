@@ -13,15 +13,38 @@ public enum ConductionResourceState<Input, Resource> {
    case processing(id: ConductionResourceTaskID, priority: Int?, input: Input?)
    case fetched(Resource?)
    case invalid(Resource?)
+   
+   // MARK: - Public Properties
+   var priority: Int? {
+      switch self {
+      case .fetching(_, let priority): return priority
+      case .processing(_, let priority, _): return priority
+      default: return nil
+      }
+   }
+   
+   var input: Input? {
+      switch self {
+      case .processing(_, _, let input): return input
+      default: return nil
+      }
+   }
+
+   var resource: Resource? {
+      switch self {
+      case .fetched(let resource): return resource
+      default: return nil
+      }
+   }
 }
 
 public typealias ConductionResourceObserver = UUID
 
 public typealias ConductionResourceTaskID = UUID
 
-public typealias ConductionResourceFetchBlock<Input, Resource> = (_ state: ConductionResourceState<Input, Resource>, _ completion: @escaping (_ fetchedInput: Input?) -> Void) -> Void
+public typealias ConductionResourceFetchBlock<Input, Resource> = (_ priority: Int?, _ completion: @escaping (_ fetchedInput: Input?) -> Void) -> Void
 
-public typealias ConductionResourceTransformBlock<Input, Resource> = (_ state: ConductionResourceState<Input, Resource>, _ completion: @escaping (_ resource: Resource?) -> Void) -> Void
+public typealias ConductionResourceTransformBlock<Input, Resource> = (_ input: Input?, _ priority: Int?, _ completion: @escaping (_ resource: Resource?) -> Void) -> Void
 
 public typealias ConductionResourceCommitBlock<Input, Resource> = (_ state: ConductionResourceState<Input, Resource>, _ nextState: ConductionResourceState<Input, Resource>) -> ConductionResourceState<Input, Resource>?
 
@@ -364,7 +387,7 @@ open class ConductionBaseResource<Input, Resource> {
          return
       }
       
-      fetchBlock(state) { input in
+      fetchBlock(state.priority) { input in
          self.dispatch {
             switch self.state {
             case .fetching(let newID, _):
@@ -382,7 +405,7 @@ open class ConductionBaseResource<Input, Resource> {
          return
       }
       
-      transformBlock(state) { resource in
+      transformBlock(state.input, state.priority) { resource in
          self.dispatch {
             switch self.state {
             case .processing(let newID, _, _):
