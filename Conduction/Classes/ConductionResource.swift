@@ -35,6 +35,8 @@ open class ConductionBaseResource<Input, Resource> {
    private var _observerBlocks: [ConductionResourceObserverEntry<Resource>] = []
    private var _stateObserverBlocks: [(id: ConductionResourceObserver, priority: Int, block: (_ oldState: ConductionResourceState<Input, Resource>, _ newState: ConductionResourceState<Input, Resource>) -> Void)] = []
    private var _getHistory: [ConductionResourceObserver] = []
+   private var _dispatchKey = DispatchSpecificKey<Void>()
+
    
    // MARK: - Public Properties
    public private(set) var state: ConductionResourceState<Input, Resource> = .empty {
@@ -52,6 +54,7 @@ open class ConductionBaseResource<Input, Resource> {
    
    // MARK: - Init
    public init(dispatchQueue: DispatchQueue = .main, defaultPriority: Int = 0, fetchBlock: ConductionResourceFetchBlock<Input, Resource>? = nil, transformBlock: ConductionResourceTransformBlock<Input, Resource>? = nil, commitBlock: @escaping ConductionResourceCommitBlock<Input, Resource> = { _, nextState in return nextState }) {
+      dispatchQueue.setSpecific(key: _dispatchKey, value: ())
       self.dispatchQueue = dispatchQueue
       self.defaultPriority = defaultPriority
       self.fetchBlock = fetchBlock
@@ -62,7 +65,7 @@ open class ConductionBaseResource<Input, Resource> {
    // MARK: - Public
    @discardableResult public func get(observer: ConductionResourceObserver? = nil, priority: Int? = nil, completion: @escaping (_ resource: Resource?) -> Void) -> ConductionResourceObserver {
       let observer = observer ?? ConductionResourceObserver()
-      dispatchQueue.async {
+      dispatch {
          self.directGet(observer: observer, priority: priority, completion: completion)
       }
       return observer
@@ -70,7 +73,7 @@ open class ConductionBaseResource<Input, Resource> {
 
    @discardableResult public func observe(observer: ConductionResourceObserver? = nil, priority: Int? = nil, completion: @escaping (_ resource: Resource?) -> Void) -> ConductionResourceObserver {
       let observer = observer ?? ConductionResourceObserver()
-      dispatchQueue.async {
+      dispatch {
          self.directObserve(observer: observer, priority: priority, completion: completion)
       }
       return observer
@@ -78,72 +81,82 @@ open class ConductionBaseResource<Input, Resource> {
 
    @discardableResult public func observeState(observer: ConductionResourceObserver? = nil, priority: Int? = nil, completion: @escaping (_ oldState: ConductionResourceState<Input, Resource>, _ newState: ConductionResourceState<Input, Resource>) -> Void) -> ConductionResourceObserver {
       let observer = observer ?? ConductionResourceObserver()
-      dispatchQueue.async {
+      dispatch {
          self.directObserveState(observer: observer, priority: priority, completion: completion)
       }
       return observer
    }
 
    public func forget(_ observer: ConductionResourceObserver) {
-      dispatchQueue.async {
+     dispatch {
          self.directForget(observer)
       }
    }
    
    public func forgetAll() {
-      dispatchQueue.async {
+      dispatch {
          self.directForgetAll()
       }
    }
    
    public func check(completion: @escaping (_ state: ConductionResourceState<Input, Resource>, _ priority: Int?, _ input: Input?, _ resource: Resource?) -> Void) {
-      dispatchQueue.async {
+      dispatch {
          self.directCheck(completion: completion)
       }
    }
    
    public func load() {
-      dispatchQueue.async {
+      dispatch {
          self.directLoad()
       }
    }
 
    public func reload() {
-      dispatchQueue.async {
+      dispatch {
          self.directReload()
       }
    }
 
    public func clear() {
-      dispatchQueue.async {
+      dispatch {
          self.directClear()
       }
    }
    
    public func expire() {
-      dispatchQueue.async {
+      dispatch {
          self.directExpire()
       }
    }
    
    public func invalidate() {
-      dispatchQueue.async {
+      dispatch {
          self.directInvalidate()
       }
    }
    
    public func setInput( _ input: Input?) {
-      dispatchQueue.async {
+      dispatch {
          self.directSetInput(input)
       }
    }
    
    public func setResource(_ resource: Resource?) {
-      dispatchQueue.async {
+      dispatch {
          self.directSetResource(resource)
       }
    }
    
+   public func dispatch(_ block: @escaping () -> Void) {
+      if dispatchQueue.getSpecific(key: _dispatchKey) != nil {
+         block()
+      } else {
+         dispatchQueue.async {
+            block()
+         }
+      }
+   }
+
    // MARK: - Direct
    open func directTransition(newState: ConductionResourceState<Input, Resource>) {
       let oldState = state
@@ -307,6 +320,11 @@ open class ConductionBaseResource<Input, Resource> {
    open func directSetResource(_ resource: Resource?) {
       directTransition(newState: .fetched(resource))
    }
+   
+   // MARK: - Life Cycle
+   deinit {
+      dispatchQueue.setSpecific(key: _dispatchKey, value: nil)
+   }
 
    // MARK: - Private
    private func _priority() -> Int? {
@@ -347,7 +365,7 @@ open class ConductionBaseResource<Input, Resource> {
       }
       
       fetchBlock(state) { [weak self] input in
-         self?.dispatchQueue.async {
+         self?.dispatch {
             guard let strongSelf = self else { return }
             switch strongSelf.state {
             case .fetching(let newID, _):
@@ -366,7 +384,7 @@ open class ConductionBaseResource<Input, Resource> {
       }
       
       transformBlock(state) { [weak self] resource in
-         self?.dispatchQueue.async {
+         self?.dispatch {
             guard let strongSelf = self else { return }
             switch strongSelf.state {
             case .processing(let newID, _, _):
