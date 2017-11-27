@@ -15,7 +15,7 @@ public enum ConductionResourceState<Input, Resource> {
    case invalid(Resource?)
    
    // MARK: - Public Properties
-   var priority: Int? {
+   public var priority: Int? {
       switch self {
       case .fetching(_, let priority): return priority
       case .processing(_, let priority, _): return priority
@@ -23,14 +23,14 @@ public enum ConductionResourceState<Input, Resource> {
       }
    }
    
-   var input: Input? {
+   public var input: Input? {
       switch self {
       case .processing(_, _, let input): return input
       default: return nil
       }
    }
 
-   var resource: Resource? {
+   public var resource: Resource? {
       switch self {
       case .fetched(let resource): return resource
       default: return nil
