@@ -311,7 +311,7 @@ open class ConductionBaseResource<Input, Resource> {
    open func directReload() {
       switch state {
       case .invalid: return
-      default:_fetch(id: ConductionResourceTaskID())
+      default: directTransition(newState: .fetching(id: ConductionResourceTaskID(), priority: _priority()))
       }
    }
 
