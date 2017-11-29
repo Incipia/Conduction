@@ -22,7 +22,14 @@ public enum ConductionResourceState<Parameter, Input, Resource> {
       default: return nil
       }
    }
-   
+
+   public var parameter: Parameter? {
+      switch self {
+      case .fetching(_, _, let parameter): return parameter
+      default: return nil
+      }
+   }
+
    public var input: Input? {
       switch self {
       case .processing(_, _, let input): return input
@@ -211,7 +218,7 @@ open class ConductionBaseResource<Parameter, Input, Resource> {
          case .processing(let oldID, _, _): guard id != oldID else { return }
          default: break
          }
-         _process(id: id, input: input)
+         _process(id: id)
       case .fetched(let resource):
          self.resource = resource
          _callWaitingBlocks()
@@ -334,6 +341,7 @@ open class ConductionBaseResource<Parameter, Input, Resource> {
    }
 
    open func directClear() {
+      parameter = nil
       input = nil
       resource = nil
       directExpire()
@@ -405,11 +413,11 @@ open class ConductionBaseResource<Parameter, Input, Resource> {
    
    private func _fetch(id: ConductionResourceTaskID) {
       guard let fetchBlock = fetchBlock else {
-         directTransition(newState: .processing(id: ConductionResourceTaskID(), priority: _priority(), input: nil))
+         directTransition(newState: .processing(id: ConductionResourceTaskID(), priority: _priority(), input: state.parameter as? Input))
          return
       }
       
-      fetchBlock(parameter, state.priority) { input in
+      fetchBlock(state.parameter, state.priority) { input in
          self.dispatch {
             switch self.state {
             case .fetching(let newID, _, _):
@@ -421,9 +429,9 @@ open class ConductionBaseResource<Parameter, Input, Resource> {
       }
    }
 
-   private func _process(id: ConductionResourceTaskID, input: Input?) {
+   private func _process(id: ConductionResourceTaskID) {
       guard let transformBlock = transformBlock else {
-         directTransition(newState: .fetched(input as? Resource))
+         directTransition(newState: .fetched(state.input as? Resource))
          return
       }
       
@@ -449,7 +457,13 @@ open class ConductionBaseResource<Parameter, Input, Resource> {
    }
 }
 
-public class ConductionResource<Resource>: ConductionBaseResource<Void, Resource, Resource> {
+open class ConductionTransformedResource<Input, Resource>: ConductionBaseResource<Void, Input, Resource> {
+   public init(dispatchQueue: DispatchQueue = .main, defaultPriority: Int = 0, commitBlock: @escaping ConductionResourceCommitBlock<Void, Input, Resource> = { _, nextState in return nextState }, fetchBlock: @escaping ConductionResourceFetchBlock<Void, Input>, transformBlock: @escaping ConductionResourceTransformBlock<Input, Resource>) {
+      super.init(dispatchQueue: dispatchQueue, defaultPriority: defaultPriority, fetchBlock: fetchBlock, transformBlock: transformBlock, commitBlock: commitBlock)
+   }
+}
+
+open class ConductionResource<Resource>: ConductionBaseResource<Void, Resource, Resource> {
    public init(dispatchQueue: DispatchQueue = .main, defaultPriority: Int = 0, commitBlock: @escaping ConductionResourceCommitBlock<Void, Resource, Resource> = { _, nextState in return nextState }, fetchBlock: @escaping ConductionResourceFetchBlock<Void, Resource>) {
       super.init(dispatchQueue: dispatchQueue, defaultPriority: defaultPriority, fetchBlock: fetchBlock, commitBlock: commitBlock)
    }
