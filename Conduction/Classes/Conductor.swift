@@ -17,9 +17,13 @@ open class Conductor: NSObject {
    public weak var context: UINavigationController?
    weak var topBeforeShowing: UIViewController?
    weak var previousContextDelegate: UINavigationControllerDelegate?
-   
+
+   public var willShowBlock: (() -> Void) = {}
+   public var showBlock: (() -> Void) = {}
+
+   public var willDismissBlock: (() -> Void) = {}
    public var dismissBlock: (() -> Void) = {}
-   
+
    fileprivate var _isShowing: Bool = false
    fileprivate var _resetCompletion: (() -> Void)?
    fileprivate var _dismissCompletion: (() -> Void)?
@@ -129,10 +133,12 @@ extension Conductor: UINavigationControllerDelegate {
       
       if _conductorIsBeingPoppedOffContext(byShowing: viewController) {
          conductorWillDismiss(from: navigationController)
+         willDismissBlock()
       }
       
       if !_isShowing, rootViewController == viewController {
          conductorWillShow(in: navigationController)
+         willShowBlock()
       }
       
       previousDelegate?.navigationController?(navigationController, willShow: viewController, animated: animated)
@@ -147,6 +153,7 @@ extension Conductor: UINavigationControllerDelegate {
       if !_isShowing, rootViewController == viewController {
          conductorDidShow(in: navigationController)
          _isShowing = true
+         showBlock()
       }
       
       if _isShowing, rootViewController == viewController, let resetCompletion = _resetCompletion {
