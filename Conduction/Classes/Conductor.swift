@@ -41,6 +41,11 @@ open class Conductor: NSObject {
    open func conductorDidDismiss(from context: UINavigationController) {
    }
    
+   public func show(conductor: Conductor?, animated: Bool = true) {
+      guard let context = self.context else { return }
+      conductor?.show(with: context, animated: animated)
+   }
+   
    public func show(with context: UINavigationController, animated: Bool = false) {
       guard self.context == nil else { fatalError("Conductor (\(self)) already has a context: \(String(describing: self.context))") }
       guard let rootViewController = rootViewController else { fatalError("Conductor (\(self)) has no root view controller") }
