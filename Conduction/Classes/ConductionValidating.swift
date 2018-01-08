@@ -89,15 +89,13 @@ public extension KVConductionValidating {
       let messageKey = $0.map { ($0 as? ConductionHumanReadable)?.humanReadableString ?? $0.rawValue }.joined(separator: ", ")
       return (keys: $0, message: messageKey.isEmpty ? "Conflicting values." : "\(messageKey): Conflicting values.") }
    }
-   var validatingKeys: [Key] { return [] }
+   var validatingKeys: [Key] { return Key.all }
    var validationContext: String { return (self as? ConductionHumanReadable)?.humanReadableString ?? "\(type(of: self))" }
    var errorsForKeys: [(key: String, error: ConductionValidationError)] {
-      var errorsForKeys: [(key: String, error: ConductionValidationError)] = []
       return validatingKeys.flatMap {
          guard let value = self[$0] as? ConductionValidating, let error = value.validationError else { return nil }
          return (key: $0.rawValue, error: error)
       }
-      return errorsForKeys
    }
    
    var validationError: ConductionValidationError? {
