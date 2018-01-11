@@ -92,10 +92,24 @@ public extension KVConductionValidating {
    var validatingKeys: [Key] { return Key.all }
    var validationContext: String { return (self as? ConductionHumanReadable)?.humanReadableString ?? "\(type(of: self))" }
    var errorsForKeys: [(key: String, error: ConductionValidationError)] {
-      return validatingKeys.flatMap {
-         guard let value = self[$0] as? ConductionValidating, let error = value.validationError else { return nil }
-         return (key: $0.rawValue, error: error)
+      let errorArrays: [[(key: String, error: ConductionValidationError)]] = validatingKeys.flatMap { key in
+         guard let value = self[key] else { return nil }
+         if let validatingValue = value as? ConductionValidating {
+            guard let error = validatingValue.validationError else { return nil }
+            return [(key: key.rawValue, error: error)]
+         }
+         if let validatingCollection = value as? [ConductionValidating] {
+            var errors: [(key: String, error: ConductionValidationError)] = []
+            for (index, promoKit) in validatingCollection.enumerated() {
+               if let error = promoKit.validationError {
+                  errors.append((key: "\(key.rawValue)[\(index)]", error: error))
+               }
+            }
+            return errors
+         }
+         return nil
       }
+      return errorArrays.flatMap { return $0 }
    }
    
    var validationError: ConductionValidationError? {
