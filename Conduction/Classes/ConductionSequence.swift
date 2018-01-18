@@ -81,7 +81,7 @@ open class ConductionSequence<State: ConductionSequenceState>: ConductionStateOb
       _oldStateContext = context
    }
    
-   public override func stateChanged(oldState: State? = nil) {
+   open override func stateChanged(oldState: State? = nil) {
       defer {
          _stateChangeBlocks.forEach { $0.value(oldState ?? state, state) }
       }
