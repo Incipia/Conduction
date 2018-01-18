@@ -66,11 +66,15 @@ open class ConductionStateObserver<State: ConductionState>: ConductionStateObser
    
    // MARK: - Public Properties
    public var state: State = State() {
+      willSet { stateWillChange(nextState: newValue) }
       didSet { stateChanged(oldState: oldValue) }
    }
    
    // MARK: - Init
    public init() {}
+   
+   // MARK: - Subclass Hooks
+   open func stateWillChange(nextState: State) {}
    
    // MARK: - Public
    public func resetState() {
