@@ -26,6 +26,8 @@
 		E3ADED5B31234F45B77718BFD5379706 /* Conductor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43D727143668405D96652F4E552973CC /* Conductor.swift */; };
 		E5F624BF28A038AC7A81A171FE7CEECD /* Conduction-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D5B0DFE56B6AAD82D527DFA04010D64 /* Conduction-dummy.m */; };
 		E96B8A651FBE1E8F00E02CBC /* ConductionResource.swift in Sources */ = {isa = PBXBuildFile; fileRef = E96B8A641FBE1E8F00E02CBC /* ConductionResource.swift */; };
+		E9C6C823200EAB2C00879604 /* ConductionSequence.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C6C822200EAB2C00879604 /* ConductionSequence.swift */; };
+		E9C6C825200FB51300879604 /* ConductionContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C6C824200FB51300879604 /* ConductionContext.swift */; };
 		E9EB44E01F1FC17C00FC66E7 /* ConductionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9EB44DE1F1FC17C00FC66E7 /* ConductionState.swift */; };
 		E9EB44E11F1FC17C00FC66E7 /* ConductionWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9EB44DF1F1FC17C00FC66E7 /* ConductionWrapper.swift */; };
 		E9EB44E31F1FC26700FC66E7 /* ConductionValidating.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9EB44E21F1FC26700FC66E7 /* ConductionValidating.swift */; };
@@ -104,6 +106,8 @@
 		E1E0E441494B442DF9271716FBCF8283 /* Pods-Conduction_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-Conduction_Tests.release.xcconfig"; sourceTree = "<group>"; };
 		E2CA3163B3DCE099AC54D1A6CBB237E0 /* Bindable-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Bindable-umbrella.h"; sourceTree = "<group>"; };
 		E96B8A641FBE1E8F00E02CBC /* ConductionResource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConductionResource.swift; sourceTree = "<group>"; };
+		E9C6C822200EAB2C00879604 /* ConductionSequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConductionSequence.swift; sourceTree = "<group>"; };
+		E9C6C824200FB51300879604 /* ConductionContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConductionContext.swift; sourceTree = "<group>"; };
 		E9EB44DE1F1FC17C00FC66E7 /* ConductionState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConductionState.swift; sourceTree = "<group>"; };
 		E9EB44DF1F1FC17C00FC66E7 /* ConductionWrapper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConductionWrapper.swift; sourceTree = "<group>"; };
 		E9EB44E21F1FC26700FC66E7 /* ConductionValidating.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConductionValidating.swift; sourceTree = "<group>"; };
@@ -211,6 +215,8 @@
 				E9EB44E21F1FC26700FC66E7 /* ConductionValidating.swift */,
 				E9EB44DF1F1FC17C00FC66E7 /* ConductionWrapper.swift */,
 				43D727143668405D96652F4E552973CC /* Conductor.swift */,
+				E9C6C822200EAB2C00879604 /* ConductionSequence.swift */,
+				E9C6C824200FB51300879604 /* ConductionContext.swift */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -493,10 +499,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				FECB2B6AF73B3B7F768537E362AB3ED4 /* Bindable-dummy.m in Sources */,
+				E9C6C825200FB51300879604 /* ConductionContext.swift in Sources */,
 				07EC025A2FDDF447422DE420A2D83139 /* Bindable.swift in Sources */,
 				E9EB44E11F1FC17C00FC66E7 /* ConductionWrapper.swift in Sources */,
 				41337ED65B52C9BE0170C4D9F25ECCCD /* JSONInitable.swift in Sources */,
 				E9EB44E31F1FC26700FC66E7 /* ConductionValidating.swift in Sources */,
+				E9C6C823200EAB2C00879604 /* ConductionSequence.swift in Sources */,
 				76BC3E3C9FC70A927200233F1EAC1232 /* JSONRepresentable.swift in Sources */,
 				E96B8A651FBE1E8F00E02CBC /* ConductionResource.swift in Sources */,
 				7AF14067663D726742A1452698FA4DC4 /* KVCompliance.swift in Sources */,
