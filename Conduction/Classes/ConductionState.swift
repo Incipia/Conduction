@@ -77,6 +77,10 @@ open class ConductionStateObserver<State: ConductionState>: ConductionStateObser
    open func stateWillChange(nextState: State) {}
    
    // MARK: - Public
+   public func stateChanged(oldState: State? = nil) {
+      _stateChangeBlocks.forEach { $0.value(oldState ?? state, state) }
+   }
+
    public func resetState() {
       state = State()
    }

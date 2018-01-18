@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol ConductionStepState: ConductionState {
+public protocol ConductionSequenceState: ConductionState {
    associatedtype Step: Equatable
    
    var step: Step? { get set }
@@ -19,12 +19,12 @@ public struct ConductionSequenceLayer<Step: Equatable> {
    let conductor: Conductor?
 }
 
-public class ConductionSequence<State: ConductionStepState>: ConductionStateObserver<State>, ConductionContext {
+open class ConductionSequence<State: ConductionSequenceState>: ConductionStateObserver<State>, ConductionContext {
    // MARK: - Private Properties
    private var _oldStateContext: Any?
    
    // MARK: - Public Properties
-   public var context: Any? { return state }
+   open var context: Any? { return state }
    public var contextuals: [ConductionContextual] { return layers.flatMap { $0.conductor as? ConductionContextual } }
    public let navigationContext: UINavigationController
    public private(set) var layers: [ConductionSequenceLayer<State.Step>] = []
@@ -77,11 +77,11 @@ public class ConductionSequence<State: ConductionStepState>: ConductionStateObse
    }
    
    // MARK: - Overridden
-   public override func stateWillChange(nextState: State) {
+   open override func stateWillChange(nextState: State) {
       _oldStateContext = context
    }
    
-   public func stateChanged(oldState: State? = nil) {
+   public override func stateChanged(oldState: State? = nil) {
       defer {
          _stateChangeBlocks.forEach { $0.value(oldState ?? state, state) }
       }
