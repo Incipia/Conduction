@@ -31,6 +31,7 @@
 		E9EB44E01F1FC17C00FC66E7 /* ConductionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9EB44DE1F1FC17C00FC66E7 /* ConductionState.swift */; };
 		E9EB44E11F1FC17C00FC66E7 /* ConductionWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9EB44DF1F1FC17C00FC66E7 /* ConductionWrapper.swift */; };
 		E9EB44E31F1FC26700FC66E7 /* ConductionValidating.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9EB44E21F1FC26700FC66E7 /* ConductionValidating.swift */; };
+		E9FDCEF920264F25005FB782 /* ConductionRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9FDCEF820264F25005FB782 /* ConductionRoute.swift */; };
 		EEE045BC51CDD8E7A905767F4BF83F1B /* Pods-Conduction_Example-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = BDA19D188F6B657946E8700DCC1C9941 /* Pods-Conduction_Example-dummy.m */; };
 		FD3F9A18CCC1172D6E11983A1FA775EB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7C03BFAD1B279C244D9169E5DFCCB41 /* Foundation.framework */; };
 		FECB2B6AF73B3B7F768537E362AB3ED4 /* Bindable-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 930F1623AAD5A9B0A00C89690D4EE7FF /* Bindable-dummy.m */; };
@@ -111,6 +112,7 @@
 		E9EB44DE1F1FC17C00FC66E7 /* ConductionState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConductionState.swift; sourceTree = "<group>"; };
 		E9EB44DF1F1FC17C00FC66E7 /* ConductionWrapper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConductionWrapper.swift; sourceTree = "<group>"; };
 		E9EB44E21F1FC26700FC66E7 /* ConductionValidating.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConductionValidating.swift; sourceTree = "<group>"; };
+		E9FDCEF820264F25005FB782 /* ConductionRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConductionRoute.swift; sourceTree = "<group>"; };
 		EE85D906F91F0C640124AB966D465CFA /* Pods-Conduction_Example.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = "sourcecode.module-map"; path = "Pods-Conduction_Example.modulemap"; sourceTree = "<group>"; };
 		F12CC5825688723152699EC0335EF6E4 /* JSONInitable.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = JSONInitable.swift; path = Bindable/Classes/JSON/JSONInitable.swift; sourceTree = "<group>"; };
 		FAE89A4FE9E7475DAB468014C53C0C4A /* Bindable-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Bindable-prefix.pch"; sourceTree = "<group>"; };
@@ -217,6 +219,7 @@
 				43D727143668405D96652F4E552973CC /* Conductor.swift */,
 				E9C6C822200EAB2C00879604 /* ConductionSequence.swift */,
 				E9C6C824200FB51300879604 /* ConductionContext.swift */,
+				E9FDCEF820264F25005FB782 /* ConductionRoute.swift */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -505,6 +508,7 @@
 				41337ED65B52C9BE0170C4D9F25ECCCD /* JSONInitable.swift in Sources */,
 				E9EB44E31F1FC26700FC66E7 /* ConductionValidating.swift in Sources */,
 				E9C6C823200EAB2C00879604 /* ConductionSequence.swift in Sources */,
+				E9FDCEF920264F25005FB782 /* ConductionRoute.swift in Sources */,
 				76BC3E3C9FC70A927200233F1EAC1232 /* JSONRepresentable.swift in Sources */,
 				E96B8A651FBE1E8F00E02CBC /* ConductionResource.swift in Sources */,
 				7AF14067663D726742A1452698FA4DC4 /* KVCompliance.swift in Sources */,
