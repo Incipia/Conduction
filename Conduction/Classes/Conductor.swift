@@ -13,7 +13,7 @@ import UIKit
          that's used for navigating the user through a specific 'flow'
  */
 
-open class Conductor: NSObject {
+open class Conductor: NSObject, ConductionRouting {
    public weak var context: UINavigationController?
    weak var topBeforeShowing: UIViewController?
    weak var previousContextDelegate: UINavigationControllerDelegate?
@@ -62,6 +62,9 @@ open class Conductor: NSObject {
    }
    
    @objc public func dismiss() {
+      if let routeParent = routeParent {
+         routeParent.routeChildRemoved(animated: topBeforeShowing != nil)
+      }
       guard let topBeforeShowing = topBeforeShowing else {
          _dismissCompletion?()
          _dismissCompletion = nil
@@ -102,6 +105,30 @@ open class Conductor: NSObject {
          _dismissCompletion = nil
       }
       dismissBlock()
+   }
+   
+   // MARK: - ConductionRouting
+   open var routingName: String { return "" }
+   open var routeParent: ConductionRouting?
+   open var routeChild: ConductionRouting?
+   open var navigationContext: UINavigationController? { return context }
+   open var modalContext: UIViewController? { return context?.topViewController }
+   
+   open func showInRoute(routeContext: ConductionRouting, animated: Bool) -> Bool {
+      guard let navigationContext = routeContext.navigationContext else { return false }
+      routeParent = routeContext
+      show(with: navigationContext, animated: animated)
+      return true
+   }
+   
+   open func dismissFromRoute(animated: Bool) -> Bool {
+      dismiss()
+      return true
+   }
+   
+   open func update(newRoute: ConductionRoute, completion: ((Bool) -> Void)?) {
+      guard !self.route.forwardRouteUpdate(route: newRoute, completion: completion) else { return }
+      completion?(false)
    }
 }
 
