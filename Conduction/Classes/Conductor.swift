@@ -15,6 +15,7 @@ import UIKit
 
 open class Conductor: NSObject, ConductionRouting {
    public weak var context: UINavigationController?
+   public weak var alertContext: UIViewController?
    weak var topBeforeShowing: UIViewController?
    weak var previousContextDelegate: UINavigationControllerDelegate?
 
