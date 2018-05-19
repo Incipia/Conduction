@@ -126,7 +126,10 @@ open class TabConductor: Conductor {
    }
    
    override public func dismiss() {
-      fatalError("dismiss not yet implemented for TabConductor")
+      guard let context = context, var viewControllers = tabBarController?.viewControllers else { return }
+      guard let index = viewControllers.index(of: context) else { return }
+      viewControllers.remove(at: index)
+      tabBarController?.setViewControllers(viewControllers, animated: false)
    }
 }
 
