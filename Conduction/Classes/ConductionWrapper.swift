@@ -24,7 +24,7 @@ public protocol ConductionWrapperObserverType: class {
    typealias ModelChangeBlock = (_ old: DataModel, _ new: DataModel) -> Void
    
    // MARK: - Public Properties
-   var model: DataModel { get }
+   var model: DataModel! { get }
    var _modelChangeBlocks: [ConductionObserverHandle : ModelChangeBlock] { get set }
    
    // MARK: - Public
@@ -37,16 +37,19 @@ public protocol ConductionWrapperObserverType: class {
 
 public extension ConductionWrapperObserverType {
    @discardableResult public func addModelObserver(_ changeBlock: @escaping ModelChangeBlock) -> ConductionObserverHandle {
-      changeBlock(model, model)
+      if let model = model {
+         changeBlock(model, model)
+      }
       return _modelChangeBlocks.add(newValue: changeBlock)
    }
-   
+
    public func removeModelObserver(handle: ConductionObserverHandle) {
       _modelChangeBlocks[handle] = nil
    }
    
    public func modelChanged(oldModel: DataModel? = nil) {
-      _modelChangeBlocks.forEach { $0.value(oldModel ?? model, model) }
+      guard oldModel != nil || model != nil else { return }
+      _modelChangeBlocks.forEach { $0.value(oldModel ?? model, model ?? oldModel!) }
    }
 }
 
@@ -58,12 +61,14 @@ open class StatelessConductionWrapper<DataModel>: ConductionWrapperObserverType 
    public var _modelChangeBlocks: [ConductionObserverHandle : ModelChangeBlock] = [:]
 
    // MARK: - Public Properties
-   public var model: DataModel {
+   public var model: DataModel! {
       didSet { modelChanged(oldModel: oldValue) }
    }
    
+   public var hasModel: Bool { return model != nil }
+   
    // MARK: - Init
-   public init(model: DataModel) {
+   public init(model: DataModel?) {
       self.model = model
    }
 }

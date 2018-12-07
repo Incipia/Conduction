@@ -94,26 +94,26 @@ open class ConductionBaseResource<Parameter, Input, Resource> {
    }
    
    // MARK: - Public
-   @discardableResult public func get(observer: ConductionResourceObserver? = nil, parameter: Parameter? = nil, priority: Int? = nil, completion: @escaping (_ resource: Resource?) -> Void) -> ConductionResourceObserver {
+   @discardableResult public func get(observer: ConductionResourceObserver? = nil, parameter: Parameter? = nil, priority: Int? = nil, callNow: Bool = false, completion: @escaping (_ resource: Resource?) -> Void) -> ConductionResourceObserver {
       let observer = observer ?? ConductionResourceObserver()
       dispatch {
-         self.directGet(observer: observer, parameter: parameter, priority: priority, completion: completion)
+         self.directGet(observer: observer, parameter: parameter, priority: priority, callNow: callNow, completion: completion)
       }
       return observer
    }
 
-   @discardableResult public func observe(observer: ConductionResourceObserver? = nil, parameter: Parameter? = nil, priority: Int? = nil, completion: @escaping (_ resource: Resource?) -> Void) -> ConductionResourceObserver {
+   @discardableResult public func observe(observer: ConductionResourceObserver? = nil, parameter: Parameter? = nil, priority: Int? = nil, callNow: Bool = false, completion: @escaping (_ resource: Resource?) -> Void) -> ConductionResourceObserver {
       let observer = observer ?? ConductionResourceObserver()
       dispatch {
-         self.directObserve(observer: observer, parameter: parameter, priority: priority, completion: completion)
+         self.directObserve(observer: observer, parameter: parameter, priority: priority, callNow: callNow, completion: completion)
       }
       return observer
    }
 
-   @discardableResult public func observeState(observer: ConductionResourceObserver? = nil, parameter: Parameter? = nil, priority: Int? = nil, completion: @escaping (_ oldState: ConductionResourceState<Parameter, Input, Resource>, _ newState: ConductionResourceState<Parameter, Input, Resource>) -> Void) -> ConductionResourceObserver {
+   @discardableResult public func observeState(observer: ConductionResourceObserver? = nil, parameter: Parameter? = nil, priority: Int? = nil, callNow: Bool = false, completion: @escaping (_ oldState: ConductionResourceState<Parameter, Input, Resource>, _ newState: ConductionResourceState<Parameter, Input, Resource>) -> Void) -> ConductionResourceObserver {
       let observer = observer ?? ConductionResourceObserver()
       dispatch {
-         self.directObserveState(observer: observer, priority: priority, completion: completion)
+         self.directObserveState(observer: observer, priority: priority, callNow: callNow, completion: completion)
       }
       return observer
    }
